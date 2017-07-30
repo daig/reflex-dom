@@ -1,0 +1,282 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-pragma">{-# LANGUAGE CPP #-}</span><span>
+</span><a name="line-2"></a><span class="hs-pragma">{-# LANGUAGE ConstraintKinds #-}</span><span>
+</span><a name="line-3"></a><span class="hs-pragma">{-# LANGUAGE ExplicitForAll #-}</span><span>
+</span><a name="line-4"></a><span class="hs-pragma">{-# LANGUAGE FlexibleContexts #-}</span><span>
+</span><a name="line-5"></a><span class="hs-pragma">{-# LANGUAGE FlexibleInstances #-}</span><span>
+</span><a name="line-6"></a><span class="hs-pragma">{-# LANGUAGE MultiParamTypeClasses #-}</span><span>
+</span><a name="line-7"></a><span class="hs-pragma">{-# LANGUAGE Rank2Types #-}</span><span>
+</span><a name="line-8"></a><span class="hs-pragma">{-# LANGUAGE ScopedTypeVariables #-}</span><span>
+</span><a name="line-9"></a><span class="hs-pragma">{-# LANGUAGE TypeFamilies #-}</span><span>
+</span><a name="line-10"></a><span class="hs-pragma">{-# LANGUAGE UndecidableInstances #-}</span><span>
+</span><a name="line-11"></a><span class="hs-pragma">{-# LANGUAGE LambdaCase #-}</span><span>
+</span><a name="line-12"></a><span class="hs-cpp">#ifdef USE_TEMPLATE_HASKELL</span><span>
+</span><a name="line-13"></a><span class="hs-pragma">{-# LANGUAGE TemplateHaskell #-}</span><span>
+</span><a name="line-14"></a><span class="hs-cpp">#endif</span><span>
+</span><a name="line-15"></a><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Reflex</span><span class="hs-operator">.</span><span class="hs-identifier">Dom</span><span class="hs-operator">.</span><span class="hs-identifier">Old</span><span>
+</span><a name="line-16"></a><span>       </span><span class="hs-special">(</span><span> </span><a href="Reflex.Dom.Old.html#MonadWidget"><span class="hs-identifier hs-type">MonadWidget</span></a><span>
+</span><a name="line-17"></a><span>       </span><span class="hs-special">,</span><span> </span><a href="Reflex.Dom.Old.html#El"><span class="hs-identifier hs-type">El</span></a><span>
+</span><a name="line-18"></a><span>       </span><span class="hs-special">,</span><span> </span><a href="Reflex.Dom.Old.html#ElConfig"><span class="hs-identifier hs-type">ElConfig</span></a><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span>
+</span><a name="line-19"></a><span>       </span><span class="hs-special">,</span><span> </span><a href="Reflex.Dom.Old.html#elConfig_namespace"><span class="hs-identifier hs-var">elConfig_namespace</span></a><span>
+</span><a name="line-20"></a><span>       </span><span class="hs-special">,</span><span> </span><a href="Reflex.Dom.Old.html#elConfig_attributes"><span class="hs-identifier hs-var">elConfig_attributes</span></a><span>
+</span><a name="line-21"></a><span>       </span><span class="hs-special">,</span><span> </span><a href="Reflex.Dom.Old.html#_el_clicked"><span class="hs-identifier hs-var">_el_clicked</span></a><span>
+</span><a name="line-22"></a><span>       </span><span class="hs-special">,</span><span> </span><a href="Reflex.Dom.Old.html#_el_element"><span class="hs-identifier hs-var">_el_element</span></a><span>
+</span><a name="line-23"></a><span>       </span><span class="hs-special">,</span><span> </span><a href="Reflex.Dom.Old.html#_el_events"><span class="hs-identifier hs-var">_el_events</span></a><span>
+</span><a name="line-24"></a><span>       </span><span class="hs-special">,</span><span> </span><a href="Reflex.Dom.Old.html#addVoidAction"><span class="hs-identifier hs-var">addVoidAction</span></a><span>
+</span><a name="line-25"></a><span>       </span><span class="hs-special">,</span><span> </span><a href="Reflex.Dom.Old.html#AttributeMap"><span class="hs-identifier hs-type">AttributeMap</span></a><span>
+</span><a name="line-26"></a><span>       </span><span class="hs-special">,</span><span> </span><a href="Reflex.Dom.Old.html#Attributes"><span class="hs-identifier hs-type">Attributes</span></a><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span>
+</span><a name="line-27"></a><span>       </span><span class="hs-special">,</span><span> </span><a href="Reflex.Dom.Old.html#buildElement"><span class="hs-identifier hs-var">buildElement</span></a><span>
+</span><a name="line-28"></a><span>       </span><span class="hs-special">,</span><span> </span><a href="Reflex.Dom.Old.html#buildElementNS"><span class="hs-identifier hs-var">buildElementNS</span></a><span>
+</span><a name="line-29"></a><span>       </span><span class="hs-special">,</span><span> </span><a href="Reflex.Dom.Old.html#buildEmptyElement"><span class="hs-identifier hs-var">buildEmptyElement</span></a><span>
+</span><a name="line-30"></a><span>       </span><span class="hs-special">,</span><span> </span><a href="Reflex.Dom.Old.html#buildEmptyElementNS"><span class="hs-identifier hs-var">buildEmptyElementNS</span></a><span>
+</span><a name="line-31"></a><span>       </span><span class="hs-special">,</span><span> </span><a href="Reflex.Dom.Old.html#elDynHtml%27"><span class="hs-identifier hs-var">elDynHtml'</span></a><span>
+</span><a name="line-32"></a><span>       </span><span class="hs-special">,</span><span> </span><a href="Reflex.Dom.Old.html#elDynHtmlAttr%27"><span class="hs-identifier hs-var">elDynHtmlAttr'</span></a><span>
+</span><a name="line-33"></a><span>       </span><span class="hs-special">,</span><span> </span><a href="Reflex.Dom.Old.html#elStopPropagationNS"><span class="hs-identifier hs-var">elStopPropagationNS</span></a><span>
+</span><a name="line-34"></a><span>       </span><span class="hs-special">,</span><span> </span><a href="Reflex.Dom.Old.html#elWith"><span class="hs-identifier hs-var">elWith</span></a><span>
+</span><a name="line-35"></a><span>       </span><span class="hs-special">,</span><span> </span><a href="Reflex.Dom.Old.html#elWith%27"><span class="hs-identifier hs-var">elWith'</span></a><span>
+</span><a name="line-36"></a><span>       </span><span class="hs-special">,</span><span> </span><a href="Reflex.Dom.Old.html#emptyElWith"><span class="hs-identifier hs-var">emptyElWith</span></a><span>
+</span><a name="line-37"></a><span>       </span><span class="hs-special">,</span><span> </span><a href="Reflex.Dom.Old.html#emptyElWith%27"><span class="hs-identifier hs-var">emptyElWith'</span></a><span>
+</span><a name="line-38"></a><span>       </span><span class="hs-special">,</span><span> </span><a href="Reflex.Dom.Old.html#namedNodeMapGetNames"><span class="hs-identifier hs-var">namedNodeMapGetNames</span></a><span>
+</span><a name="line-39"></a><span>       </span><span class="hs-special">,</span><span> </span><a href="Reflex.Dom.Old.html#nodeClear"><span class="hs-identifier hs-var">nodeClear</span></a><span>
+</span><a name="line-40"></a><span>       </span><span class="hs-special">,</span><span> </span><a href="Reflex.Dom.Old.html#onEventName"><span class="hs-identifier hs-var">onEventName</span></a><span>
+</span><a name="line-41"></a><span>       </span><span class="hs-special">,</span><span> </span><a href="Reflex.Dom.Old.html#schedulePostBuild"><span class="hs-identifier hs-var">schedulePostBuild</span></a><span>
+</span><a name="line-42"></a><span>       </span><span class="hs-special">,</span><span> </span><a href="Reflex.Dom.Old.html#text%27"><span class="hs-identifier hs-var">text'</span></a><span>
+</span><a name="line-43"></a><span>       </span><span class="hs-special">,</span><span> </span><a href="Reflex.Dom.Old.html#unsafePlaceElement"><span class="hs-identifier hs-var">unsafePlaceElement</span></a><span>
+</span><a name="line-44"></a><span>       </span><span class="hs-special">,</span><span> </span><a href="Reflex.Dom.Old.html#WidgetHost"><span class="hs-identifier hs-type">WidgetHost</span></a><span>
+</span><a name="line-45"></a><span>       </span><span class="hs-special">,</span><span> </span><a href="Reflex.Dom.Old.html#wrapElement"><span class="hs-identifier hs-var">wrapElement</span></a><span>
+</span><a name="line-46"></a><span>       </span><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
+</span><a name="line-47"></a><span>
+</span><a name="line-48"></a><span class="hs-keyword">import</span><span> </span><span class="hs-identifier">Control</span><span class="hs-operator">.</span><span class="hs-identifier">Arrow</span><span> </span><span class="hs-special">(</span><span class="hs-identifier hs-var">first</span><span class="hs-special">)</span><span>
+</span><a name="line-49"></a><span class="hs-cpp">#ifdef USE_TEMPLATE_HASKELL</span><span>
+</span><a name="line-50"></a><span class="hs-keyword">import</span><span> </span><span class="hs-identifier">Control</span><span class="hs-operator">.</span><span class="hs-identifier">Lens</span><span> </span><span class="hs-special">(</span><span class="hs-identifier hs-var">makeLenses</span><span class="hs-special">,</span><span> </span><span class="hs-special">(</span><span class="hs-operator hs-var">%~</span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="hs-special">(</span><span class="hs-operator hs-var">&amp;</span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="hs-special">(</span><span class="hs-operator hs-var">.~</span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="hs-special">(</span><span class="hs-operator hs-var">^.</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><a name="line-51"></a><span class="hs-cpp">#else</span><span>
+</span><a name="line-52"></a><span class="hs-keyword">import</span><span> </span><span class="hs-identifier">Control</span><span class="hs-operator">.</span><span class="hs-identifier">Lens</span><span> </span><span class="hs-special">(</span><span class="hs-identifier">Lens</span><span class="hs-special">,</span><span> </span><span class="hs-identifier">Lens'</span><span class="hs-special">,</span><span> </span><span class="hs-special">(</span><span class="hs-operator">%~</span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="hs-special">(</span><span class="hs-operator">&amp;</span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="hs-special">(</span><span class="hs-operator">.~</span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="hs-special">(</span><span class="hs-operator">^.</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><a name="line-53"></a><span class="hs-cpp">#endif</span><span>
+</span><a name="line-54"></a><span class="hs-keyword">import</span><span> </span><span class="hs-identifier">Control</span><span class="hs-operator">.</span><span class="hs-identifier">Monad</span><span>
+</span><a name="line-55"></a><span class="hs-keyword">import</span><span> </span><span class="hs-identifier">Control</span><span class="hs-operator">.</span><span class="hs-identifier">Monad</span><span class="hs-operator">.</span><span class="hs-identifier">Fix</span><span>
+</span><a name="line-56"></a><span class="hs-keyword">import</span><span> </span><span class="hs-identifier">Control</span><span class="hs-operator">.</span><span class="hs-identifier">Monad</span><span class="hs-operator">.</span><span class="hs-identifier">IO</span><span class="hs-operator">.</span><span class="hs-identifier">Class</span><span>
+</span><a name="line-57"></a><span class="hs-keyword">import</span><span> </span><span class="hs-identifier">Control</span><span class="hs-operator">.</span><span class="hs-identifier">Monad</span><span class="hs-operator">.</span><span class="hs-identifier">Reader</span><span>
+</span><a name="line-58"></a><span class="hs-keyword">import</span><span> </span><span class="hs-identifier">Control</span><span class="hs-operator">.</span><span class="hs-identifier">Monad</span><span class="hs-operator">.</span><span class="hs-identifier">Ref</span><span>
+</span><a name="line-59"></a><span class="hs-keyword">import</span><span> </span><span class="hs-identifier">Data</span><span class="hs-operator">.</span><span class="hs-identifier">Default</span><span>
+</span><a name="line-60"></a><span class="hs-keyword">import</span><span> </span><span class="hs-identifier">Data</span><span class="hs-operator">.</span><span class="hs-identifier">Dependent</span><span class="hs-operator">.</span><span class="hs-identifier">Map</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="hs-identifier">DMap</span><span>
+</span><a name="line-61"></a><span class="hs-keyword">import</span><span> </span><span class="hs-identifier">Data</span><span class="hs-operator">.</span><span class="hs-identifier">Functor</span><span class="hs-operator">.</span><span class="hs-identifier">Misc</span><span>
+</span><a name="line-62"></a><span class="hs-keyword">import</span><span> </span><span class="hs-identifier">Data</span><span class="hs-operator">.</span><span class="hs-identifier">Map</span><span> </span><span class="hs-special">(</span><span class="hs-identifier hs-type">Map</span><span class="hs-special">)</span><span>
+</span><a name="line-63"></a><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-identifier">Data</span><span class="hs-operator">.</span><span class="hs-identifier">Map</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="hs-identifier">Map</span><span>
+</span><a name="line-64"></a><span class="hs-keyword">import</span><span> </span><span class="hs-identifier">Data</span><span class="hs-operator">.</span><span class="hs-identifier">Set</span><span> </span><span class="hs-special">(</span><span class="hs-identifier hs-type">Set</span><span class="hs-special">)</span><span>
+</span><a name="line-65"></a><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-identifier">Data</span><span class="hs-operator">.</span><span class="hs-identifier">Set</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="hs-identifier">Set</span><span>
+</span><a name="line-66"></a><span class="hs-keyword">import</span><span> </span><span class="hs-identifier">Data</span><span class="hs-operator">.</span><span class="hs-identifier">Text</span><span> </span><span class="hs-special">(</span><span class="hs-identifier hs-type">Text</span><span class="hs-special">)</span><span>
+</span><a name="line-67"></a><span class="hs-keyword">import</span><span> </span><a href="Foreign.JavaScript.TH.html"><span class="hs-identifier">Foreign</span><span class="hs-operator">.</span><span class="hs-identifier">JavaScript</span><span class="hs-operator">.</span><span class="hs-identifier">TH</span></a><span>
+</span><a name="line-68"></a><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-identifier">GHCJS</span><span class="hs-operator">.</span><span class="hs-identifier">DOM</span><span class="hs-operator">.</span><span class="hs-identifier">Element</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="hs-identifier">Element</span><span>
+</span><a name="line-69"></a><span class="hs-keyword">import</span><span> </span><span class="hs-identifier">GHCJS</span><span class="hs-operator">.</span><span class="hs-identifier">DOM</span><span class="hs-operator">.</span><span class="hs-identifier">EventM</span><span> </span><span class="hs-special">(</span><span class="hs-identifier hs-type">EventM</span><span class="hs-special">)</span><span>
+</span><a name="line-70"></a><span class="hs-keyword">import</span><span> </span><span class="hs-identifier">GHCJS</span><span class="hs-operator">.</span><span class="hs-identifier">DOM</span><span class="hs-operator">.</span><span class="hs-identifier">NamedNodeMap</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="hs-identifier">NNM</span><span>
+</span><a name="line-71"></a><span class="hs-keyword">import</span><span> </span><span class="hs-identifier">GHCJS</span><span class="hs-operator">.</span><span class="hs-identifier">DOM</span><span class="hs-operator">.</span><span class="hs-identifier">Node</span><span> </span><span class="hs-special">(</span><span class="hs-identifier hs-var">getFirstChild</span><span class="hs-special">,</span><span> </span><span class="hs-identifier hs-var">getNodeName</span><span class="hs-special">,</span><span> </span><span class="hs-identifier hs-var">removeChild</span><span class="hs-special">)</span><span>
+</span><a name="line-72"></a><span class="hs-keyword">import</span><span> </span><span class="hs-identifier">GHCJS</span><span class="hs-operator">.</span><span class="hs-identifier">DOM</span><span class="hs-operator">.</span><span class="hs-identifier">Types</span><span>
+</span><a name="line-73"></a><span>       </span><span class="hs-special">(</span><span class="hs-identifier hs-var">liftJSM</span><span class="hs-special">,</span><span> </span><span class="hs-identifier hs-type">JSM</span><span class="hs-special">,</span><span> </span><span class="hs-identifier hs-type">IsHTMLElement</span><span class="hs-special">,</span><span> </span><span class="hs-identifier hs-type">IsNode</span><span class="hs-special">)</span><span>
+</span><a name="line-74"></a><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-identifier">GHCJS</span><span class="hs-operator">.</span><span class="hs-identifier">DOM</span><span class="hs-operator">.</span><span class="hs-identifier">Types</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="hs-identifier">DOM</span><span>
+</span><a name="line-75"></a><span class="hs-keyword">import</span><span> </span><span class="hs-identifier">Reflex</span><span class="hs-operator">.</span><span class="hs-identifier">Class</span><span>
+</span><a name="line-76"></a><span class="hs-keyword">import</span><span> </span><a href="Reflex.Dom.Builder.Class.html"><span class="hs-identifier">Reflex</span><span class="hs-operator">.</span><span class="hs-identifier">Dom</span><span class="hs-operator">.</span><span class="hs-identifier">Builder</span><span class="hs-operator">.</span><span class="hs-identifier">Class</span></a><span>
+</span><a name="line-77"></a><span class="hs-keyword">import</span><span> </span><a href="Reflex.Dom.Builder.Immediate.html"><span class="hs-identifier">Reflex</span><span class="hs-operator">.</span><span class="hs-identifier">Dom</span><span class="hs-operator">.</span><span class="hs-identifier">Builder</span><span class="hs-operator">.</span><span class="hs-identifier">Immediate</span></a><span>
+</span><a name="line-78"></a><span class="hs-keyword">import</span><span> </span><a href="Reflex.Dom.Widget.Basic.html"><span class="hs-identifier">Reflex</span><span class="hs-operator">.</span><span class="hs-identifier">Dom</span><span class="hs-operator">.</span><span class="hs-identifier">Widget</span><span class="hs-operator">.</span><span class="hs-identifier">Basic</span></a><span>
+</span><a name="line-79"></a><span class="hs-keyword">import</span><span> </span><span class="hs-identifier">Reflex</span><span class="hs-operator">.</span><span class="hs-identifier">Host</span><span class="hs-operator">.</span><span class="hs-identifier">Class</span><span>
+</span><a name="line-80"></a><span class="hs-keyword">import</span><span> </span><span class="hs-identifier">Reflex</span><span class="hs-operator">.</span><span class="hs-identifier">PerformEvent</span><span class="hs-operator">.</span><span class="hs-identifier">Class</span><span>
+</span><a name="line-81"></a><span class="hs-keyword">import</span><span> </span><span class="hs-identifier">Reflex</span><span class="hs-operator">.</span><span class="hs-identifier">PostBuild</span><span class="hs-operator">.</span><span class="hs-identifier">Class</span><span>
+</span><a name="line-82"></a><span class="hs-keyword">import</span><span> </span><span class="hs-identifier">Reflex</span><span class="hs-operator">.</span><span class="hs-identifier">TriggerEvent</span><span class="hs-operator">.</span><span class="hs-identifier">Class</span><span>
+</span><a name="line-83"></a><span>
+</span><a name="line-84"></a><span class="hs-keyword">data</span><span> </span><a name="ElConfig"><a href="Reflex.Dom.Old.html#ElConfig"><span class="hs-identifier">ElConfig</span></a></a><span> </span><a name="local-6989586621680260189"><a href="#local-6989586621680260189"><span class="hs-identifier">attrs</span></a></a><span> </span><span class="hs-glyph">=</span><span> </span><a name="ElConfig"><a href="Reflex.Dom.Old.html#ElConfig"><span class="hs-identifier">ElConfig</span></a></a><span>
+</span><a name="line-85"></a><span>  </span><span class="hs-special">{</span><span> </span><a name="_elConfig_namespace"><a href="Reflex.Dom.Old.html#_elConfig_namespace"><span class="hs-identifier">_elConfig_namespace</span></a></a><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-identifier hs-type">Maybe</span><span> </span><span class="hs-identifier hs-type">Text</span><span>
+</span><a name="line-86"></a><span>  </span><span class="hs-special">,</span><span> </span><a name="_elConfig_attributes"><a href="Reflex.Dom.Old.html#_elConfig_attributes"><span class="hs-identifier">_elConfig_attributes</span></a></a><span> </span><span class="hs-glyph">::</span><span> </span><a href="#local-6989586621680260189"><span class="hs-identifier hs-type">attrs</span></a><span>
+</span><a name="line-87"></a><span>  </span><span class="hs-special">}</span><span>
+</span><a name="line-88"></a><span>
+</span><a name="line-89"></a><span class="hs-keyword">instance</span><span> </span><a href="#local-6989586621680260190"><span class="hs-identifier hs-type">attrs</span></a><span> </span><span class="hs-glyph">~</span><span> </span><span class="hs-identifier hs-type">Map</span><span> </span><span class="hs-identifier hs-type">Text</span><span> </span><span class="hs-identifier hs-type">Text</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="hs-identifier hs-type">Default</span><span> </span><span class="hs-special">(</span><a href="Reflex.Dom.Old.html#ElConfig"><span class="hs-identifier hs-type">ElConfig</span></a><span> </span><a href="#local-6989586621680260190"><span class="hs-identifier hs-type">attrs</span></a><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
+</span><a name="line-90"></a><span>  </span><a name="local-8214565720323796809"><span class="hs-identifier">def</span></a><span> </span><span class="hs-glyph">=</span><span> </span><a href="Reflex.Dom.Old.html#ElConfig"><span class="hs-identifier hs-var">ElConfig</span></a><span>
+</span><a name="line-91"></a><span>    </span><span class="hs-special">{</span><span> </span><span class="hs-identifier">_elConfig_namespace</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-identifier hs-var">Nothing</span><span>
+</span><a name="line-92"></a><span>    </span><span class="hs-special">,</span><span> </span><span class="hs-identifier">_elConfig_attributes</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-identifier hs-var">mempty</span><span>
+</span><a name="line-93"></a><span>    </span><span class="hs-special">}</span><span>
+</span><a name="line-94"></a><span>
+</span><a name="line-95"></a><span class="hs-cpp">#ifdef USE_TEMPLATE_HASKELL</span><span>
+</span><a name="line-96"></a><span class="hs-identifier hs-var">makeLenses</span><span> </span><span class="hs-char">''ElConfig
+#else
+elConfig_namespace :: Lens' (ElConfig attrs1) (Maybe Text)
+elConfig_namespace f (ElConfig a b) = (\a' -&gt; ElConfig a' b) &lt;$&gt; f a
+{-# INLINE elConfig_namespace #-}
+elConfig_attributes :: Lens (ElConfig attrs1) (ElConfig attrs2) attrs1 attrs2
+elConfig_attributes f (ElConfig a b) = (\b' -&gt; ElConfig a b') &lt;$&gt; f b
+{-# INLINE elConfig_attributes #-}
+#endif
+
+--TODO: HasDocument is still not accounted for
+type MonadWidgetConstraints t m =
+  ( DomBuilder t m
+  , DomBuilderSpace m ~ GhcjsDomSpace
+  , MonadFix m
+  , MonadHold t m
+  , MonadSample t (Performable m)
+  , MonadReflexCreateTrigger t m
+  , PostBuild t m
+  , PerformEvent t m
+  , MonadIO m
+  , MonadIO (Performable m)
+#ifndef ghcjs_HOST_OS
+  , DOM.MonadJSM m
+  , DOM.MonadJSM (Performable m)
+#endif
+  , TriggerEvent t m
+  , HasJSContext m
+  , HasJSContext (Performable m)
+  , HasDocument m
+  , MonadRef m
+  , Ref m ~ Ref IO
+  , MonadRef (Performable m)
+  , Ref (Performable m) ~ Ref IO
+  )
+
+class MonadWidgetConstraints t m =&gt; MonadWidget t m
+instance MonadWidgetConstraints t m =&gt; MonadWidget t m
+
+type WidgetHost m = Performable m
+
+type El = Element EventResult GhcjsDomSpace
+
+addVoidAction :: MonadWidget t m =&gt; Event t (WidgetHost m ()) -&gt; m ()
+addVoidAction = performEvent_
+
+type AttributeMap = Map Text Text
+
+buildElement :: (MonadWidget t m, Attributes m attrs t) =&gt; Text -&gt; attrs -&gt; m a -&gt; m (RawElement (DomBuilderSpace m), a)
+buildElement = buildElementNS Nothing
+
+buildEmptyElement :: (MonadWidget t m, Attributes m attrs t) =&gt; Text -&gt; attrs -&gt; m (RawElement (DomBuilderSpace m))
+buildEmptyElement elementTag attrs = fst &lt;$&gt; buildElementNS Nothing elementTag attrs blank
+
+buildEmptyElementNS :: (MonadWidget t m, Attributes m attrs t) =&gt; Maybe Text -&gt; Text -&gt; attrs -&gt; m (RawElement (DomBuilderSpace m))
+buildEmptyElementNS ns elementTag attrs = fst &lt;$&gt; buildElementNS ns elementTag attrs blank
+
+buildElementNS :: (MonadWidget t m, Attributes m attrs t) =&gt; Maybe Text -&gt; Text -&gt; attrs -&gt; m a -&gt; m (RawElement (DomBuilderSpace m), a)
+buildElementNS ns elementTag attrs child = first _element_raw &lt;$&gt; buildElementInternal ns elementTag attrs child
+
+class Attributes m attrs t where
+  buildElementInternal :: MonadWidget t m =&gt; Maybe Text -&gt; Text -&gt; attrs -&gt; m a -&gt; m (Element EventResult (DomBuilderSpace m) t, a)
+
+instance Attributes m (Map Text Text) t where
+  buildElementInternal ns elementTag attrs child = do
+    let cfg = def &amp; elementConfig_namespace .~ ns
+    buildElementCommon elementTag child =&lt;&lt; addStaticAttributes attrs cfg
+
+addStaticAttributes :: Applicative m =&gt; Map Text Text -&gt; ElementConfig er t (DomBuilderSpace m) -&gt; m (ElementConfig er t (DomBuilderSpace m))
+addStaticAttributes attrs cfg = do
+  let initialAttrs = Map.fromList $ first (AttributeName Nothing) &lt;$&gt; Map.toList attrs
+  pure $ cfg &amp; elementConfig_initialAttributes .~ initialAttrs
+
+instance PostBuild t m =&gt; Attributes m (Dynamic t (Map Text Text)) t where
+  buildElementInternal ns elementTag attrs child = do
+    let cfg = def &amp; elementConfig_namespace .~ ns
+    buildElementCommon elementTag child =&lt;&lt; addDynamicAttributes attrs cfg
+
+addDynamicAttributes :: PostBuild t m =&gt; Dynamic t (Map Text Text) -&gt; ElementConfig er t (DomBuilderSpace m) -&gt; m (ElementConfig er t (DomBuilderSpace m))
+addDynamicAttributes attrs cfg = do
+  modifyAttrs &lt;- dynamicAttributesToModifyAttributes attrs
+  return $ cfg &amp; elementConfig_modifyAttributes .~ fmap mapKeysToAttributeName modifyAttrs
+
+buildElementCommon :: MonadWidget t m =&gt; Text -&gt; m a -&gt; ElementConfig er t (DomBuilderSpace m) -&gt; m (Element er (DomBuilderSpace m) t, a)
+buildElementCommon elementTag child cfg = element elementTag cfg child
+
+
+onEventName :: IsHTMLElement e =&gt; EventName en -&gt; e -&gt; EventM e (EventType en) () -&gt; JSM (JSM ())
+onEventName = elementOnEventName
+
+schedulePostBuild :: (PostBuild t m, PerformEvent t m) =&gt; WidgetHost m () -&gt; m ()
+schedulePostBuild w = do
+  postBuild &lt;- getPostBuild
+  performEvent_ $ w &lt;$ postBuild
+
+text' :: MonadWidget t m =&gt; Text -&gt; m DOM.Text
+text' s = _textNode_raw &lt;$&gt; textNode (def &amp; textNodeConfig_initialContents .~ s)
+
+instance HasAttributes (ElConfig attrs) where
+  type Attrs (ElConfig attrs) = attrs
+  attributes = elConfig_attributes
+
+instance HasNamespace (ElConfig attrs) where
+  namespace = elConfig_namespace
+
+elWith :: (MonadWidget t m, Attributes m attrs t) =&gt; Text -&gt; ElConfig attrs -&gt; m a -&gt; m a
+elWith elementTag cfg child = snd &lt;$&gt; elWith' elementTag cfg child
+
+elWith' :: (MonadWidget t m, Attributes m attrs t) =&gt; Text -&gt; ElConfig attrs -&gt; m a -&gt; m (Element EventResult (DomBuilderSpace m) t, a)
+elWith' elementTag cfg = buildElementInternal (cfg ^. namespace) elementTag $ cfg ^. attributes
+
+emptyElWith :: (MonadWidget t m, Attributes m attrs t) =&gt; Text -&gt; ElConfig attrs -&gt; m ()
+emptyElWith elementTag cfg = void $ emptyElWith' elementTag cfg
+
+emptyElWith' :: (MonadWidget t m, Attributes m attrs t) =&gt; Text -&gt; ElConfig attrs -&gt; m (Element EventResult (DomBuilderSpace m) t)
+emptyElWith' elementTag cfg = fmap fst $ elWith' elementTag cfg $ return ()
+
+{-# DEPRECATED _el_clicked &quot;Use 'domEvent Click' instead&quot; #-}
+_el_clicked :: Reflex t =&gt; Element EventResult d t -&gt; Event t ()
+_el_clicked = domEvent Click
+
+{-# DEPRECATED _el_element &quot;Use '_element_raw' instead&quot; #-}
+_el_element :: El t -&gt; RawElement GhcjsDomSpace
+_el_element = _element_raw
+
+{-# DEPRECATED _el_events &quot;Use '_element_events' instead; or, if possible, use 'domEvent' instead to retrieve a particular event&quot; #-}
+_el_events :: Element er d t -&gt; EventSelector t (WrapArg er EventName)
+_el_events = _element_events
+
+{-# DEPRECATED _el_keypress &quot;Use 'domEvent Keypress' instead&quot; #-}
+_el_keypress :: Reflex t =&gt; El t -&gt; Event t Word
+_el_keypress = domEvent Keypress
+
+{-# DEPRECATED _el_scrolled &quot;Use 'domEvent Scroll' instead&quot; #-}
+_el_scrolled :: Reflex t =&gt; El t -&gt; Event t Double
+_el_scrolled = domEvent Scroll
+
+wrapElement :: forall t m. MonadWidget t m =&gt; (forall en. DOM.HTMLElement -&gt; EventName en -&gt; EventM DOM.Element (EventType en) (Maybe (EventResult en))) -&gt; DOM.HTMLElement -&gt; m (El t)
+wrapElement eh e = do
+  let h :: (EventName en, GhcjsDomEvent en) -&gt; JSM (Maybe (EventResult en))
+      h (en, GhcjsDomEvent evt) = runReaderT (eh e en) evt
+  wrapRawElement (DOM.toElement e) $ (def :: RawElementConfig EventResult t (DomBuilderSpace m))
+    { _rawElementConfig_eventSpec = def
+        { _ghcjsEventSpec_handler = GhcjsEventHandler h
+        }
+    }
+
+unsafePlaceElement :: MonadWidget t m =&gt; DOM.HTMLElement -&gt; m (Element EventResult (DomBuilderSpace m) t)
+unsafePlaceElement e = do
+  placeRawElement $ DOM.toElement e
+  wrapRawElement (DOM.toElement e) def
+
+namedNodeMapGetNames :: DOM.NamedNodeMap -&gt; JSM (Set Text)
+namedNodeMapGetNames self = do
+  l &lt;- NNM.getLength self
+  Set.fromList &lt;$&gt; forM (take (fromIntegral l) [0..]) (
+    NNM.itemUnchecked self &gt;=&gt; getNodeName)
+
+nodeClear :: IsNode self =&gt; self -&gt; JSM ()
+nodeClear n = do
+  mfc &lt;- getFirstChild n
+  case mfc of
+    Nothing -&gt; return ()
+    Just fc -&gt; do
+      _ &lt;- removeChild n fc
+      nodeClear n
+
+elStopPropagationNS :: forall t m en a. (MonadWidget t m) =&gt; Maybe Text -&gt; Text -&gt; EventName en -&gt; m a -&gt; m a
+elStopPropagationNS ns elementTag en child = do
+  let f = GhcjsEventFilter $ \_ -&gt; do
+        return (stopPropagation, return Nothing)
+      cfg = (def :: ElementConfig EventResult t (DomBuilderSpace m))
+        &amp; namespace .~ ns
+        &amp; elementConfig_eventSpec . ghcjsEventSpec_filters %~ DMap.insert en f
+  snd &lt;$&gt; element elementTag cfg child
+
+elDynHtmlAttr' :: (DOM.MonadJSM m, MonadWidget t m) =&gt; Text -&gt; Map Text Text -&gt; Dynamic t Text -&gt; m (Element EventResult GhcjsDomSpace t)
+elDynHtmlAttr' elementTag attrs html = do
+  let cfg = def &amp; initialAttributes .~ Map.mapKeys (AttributeName Nothing) attrs
+  (e, _) &lt;- element elementTag cfg $ return ()
+  postBuild &lt;- getPostBuild
+  performEvent_ $ liftJSM . Element.setInnerHTML (_element_raw e) &lt;$&gt; leftmost [updated html, tag (current html) postBuild]
+  return e
+
+elDynHtml' :: MonadWidget t m =&gt; Text -&gt; Dynamic t Text -&gt; m (Element EventResult GhcjsDomSpace t)
+elDynHtml' elementTag = elDynHtmlAttr' elementTag mempty
+</span></pre></body></html>

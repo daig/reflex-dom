@@ -1,0 +1,719 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-pragma">{-# LANGUAGE CPP #-}</span><span>
+</span><a name="line-2"></a><span class="hs-pragma">{-# LANGUAGE ConstraintKinds #-}</span><span>
+</span><a name="line-3"></a><span class="hs-pragma">{-# LANGUAGE DataKinds #-}</span><span>
+</span><a name="line-4"></a><span class="hs-pragma">{-# LANGUAGE FlexibleContexts #-}</span><span>
+</span><a name="line-5"></a><span class="hs-pragma">{-# LANGUAGE FlexibleInstances #-}</span><span>
+</span><a name="line-6"></a><span class="hs-pragma">{-# LANGUAGE GADTs #-}</span><span>
+</span><a name="line-7"></a><span class="hs-pragma">{-# LANGUAGE MultiParamTypeClasses #-}</span><span>
+</span><a name="line-8"></a><span class="hs-pragma">{-# LANGUAGE OverloadedStrings #-}</span><span>
+</span><a name="line-9"></a><span class="hs-pragma">{-# LANGUAGE PolyKinds #-}</span><span>
+</span><a name="line-10"></a><span class="hs-pragma">{-# LANGUAGE RecursiveDo #-}</span><span>
+</span><a name="line-11"></a><span class="hs-pragma">{-# LANGUAGE ScopedTypeVariables #-}</span><span>
+</span><a name="line-12"></a><span class="hs-cpp">#ifdef USE_TEMPLATE_HASKELL</span><span>
+</span><a name="line-13"></a><span class="hs-pragma">{-# LANGUAGE TemplateHaskell #-}</span><span>
+</span><a name="line-14"></a><span class="hs-cpp">#endif</span><span>
+</span><a name="line-15"></a><span class="hs-pragma">{-# LANGUAGE TypeFamilies #-}</span><span>
+</span><a name="line-16"></a><span class="hs-pragma">{-# LANGUAGE UndecidableInstances #-}</span><span>
+</span><a name="line-17"></a><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Reflex</span><span class="hs-operator">.</span><span class="hs-identifier">Dom</span><span class="hs-operator">.</span><span class="hs-identifier">Widget</span><span class="hs-operator">.</span><span class="hs-identifier">Input</span><span> </span><span class="hs-special">(</span><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Reflex</span><span class="hs-operator">.</span><span class="hs-identifier">Dom</span><span class="hs-operator">.</span><span class="hs-identifier">Widget</span><span class="hs-operator">.</span><span class="hs-identifier">Input</span><span class="hs-special">,</span><span> </span><span class="hs-identifier hs-var">def</span><span class="hs-special">,</span><span> </span><span class="hs-special">(</span><span class="hs-operator hs-var">&amp;</span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="hs-special">(</span><span class="hs-operator hs-var">.~</span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
+</span><a name="line-18"></a><span>
+</span><a name="line-19"></a><span class="hs-keyword">import</span><span> </span><span class="hs-identifier">Prelude</span><span>
+</span><a name="line-20"></a><span>
+</span><a name="line-21"></a><span class="hs-keyword">import</span><span> </span><span class="hs-identifier">Control</span><span class="hs-operator">.</span><span class="hs-identifier">Lens</span><span> </span><span class="hs-keyword">hiding</span><span> </span><span class="hs-special">(</span><span class="hs-identifier hs-var">element</span><span class="hs-special">,</span><span> </span><span class="hs-identifier hs-var">ix</span><span class="hs-special">)</span><span>
+</span><a name="line-22"></a><span class="hs-keyword">import</span><span> </span><span class="hs-identifier">Control</span><span class="hs-operator">.</span><span class="hs-identifier">Monad</span><span class="hs-operator">.</span><span class="hs-identifier">Fix</span><span>
+</span><a name="line-23"></a><span class="hs-keyword">import</span><span> </span><span class="hs-identifier">Control</span><span class="hs-operator">.</span><span class="hs-identifier">Monad</span><span class="hs-operator">.</span><span class="hs-identifier">IO</span><span class="hs-operator">.</span><span class="hs-identifier">Class</span><span>
+</span><a name="line-24"></a><span class="hs-keyword">import</span><span> </span><span class="hs-identifier">Control</span><span class="hs-operator">.</span><span class="hs-identifier">Monad</span><span class="hs-operator">.</span><span class="hs-identifier">Reader</span><span>
+</span><a name="line-25"></a><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-identifier">Data</span><span class="hs-operator">.</span><span class="hs-identifier">Bimap</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="hs-identifier">Bimap</span><span>
+</span><a name="line-26"></a><span class="hs-keyword">import</span><span> </span><span class="hs-identifier">Data</span><span class="hs-operator">.</span><span class="hs-identifier">Default</span><span>
+</span><a name="line-27"></a><span class="hs-keyword">import</span><span> </span><span class="hs-identifier">Data</span><span class="hs-operator">.</span><span class="hs-identifier">Dependent</span><span class="hs-operator">.</span><span class="hs-identifier">Map</span><span> </span><span class="hs-special">(</span><span class="hs-identifier hs-type">DMap</span><span class="hs-special">)</span><span>
+</span><a name="line-28"></a><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-identifier">Data</span><span class="hs-operator">.</span><span class="hs-identifier">Dependent</span><span class="hs-operator">.</span><span class="hs-identifier">Map</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="hs-identifier">DMap</span><span>
+</span><a name="line-29"></a><span class="hs-keyword">import</span><span> </span><span class="hs-identifier">Data</span><span class="hs-operator">.</span><span class="hs-identifier">Functor</span><span class="hs-operator">.</span><span class="hs-identifier">Misc</span><span>
+</span><a name="line-30"></a><span class="hs-keyword">import</span><span> </span><span class="hs-identifier">Data</span><span class="hs-operator">.</span><span class="hs-identifier">Map</span><span> </span><span class="hs-special">(</span><span class="hs-identifier hs-type">Map</span><span class="hs-special">)</span><span>
+</span><a name="line-31"></a><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-identifier">Data</span><span class="hs-operator">.</span><span class="hs-identifier">Map</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="hs-identifier">Map</span><span>
+</span><a name="line-32"></a><span class="hs-keyword">import</span><span> </span><span class="hs-identifier">Data</span><span class="hs-operator">.</span><span class="hs-identifier">Maybe</span><span>
+</span><a name="line-33"></a><span class="hs-keyword">import</span><span> </span><span class="hs-identifier">Data</span><span class="hs-operator">.</span><span class="hs-identifier">Semigroup</span><span>
+</span><a name="line-34"></a><span class="hs-keyword">import</span><span> </span><span class="hs-identifier">Data</span><span class="hs-operator">.</span><span class="hs-identifier">Text</span><span> </span><span class="hs-special">(</span><span class="hs-identifier hs-type">Text</span><span class="hs-special">)</span><span>
+</span><a name="line-35"></a><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-identifier">Data</span><span class="hs-operator">.</span><span class="hs-identifier">Text</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="hs-identifier">T</span><span>
+</span><a name="line-36"></a><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-identifier">GHCJS</span><span class="hs-operator">.</span><span class="hs-identifier">DOM</span><span class="hs-operator">.</span><span class="hs-identifier">GlobalEventHandlers</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="hs-identifier">Events</span><span>
+</span><a name="line-37"></a><span class="hs-keyword">import</span><span> </span><span class="hs-identifier">GHCJS</span><span class="hs-operator">.</span><span class="hs-identifier">DOM</span><span class="hs-operator">.</span><span class="hs-identifier">EventM</span><span> </span><span class="hs-special">(</span><span class="hs-identifier hs-var">on</span><span class="hs-special">)</span><span>
+</span><a name="line-38"></a><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-identifier">GHCJS</span><span class="hs-operator">.</span><span class="hs-identifier">DOM</span><span class="hs-operator">.</span><span class="hs-identifier">FileList</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="hs-identifier">FileList</span><span>
+</span><a name="line-39"></a><span class="hs-keyword">import</span><span> </span><span class="hs-identifier">GHCJS</span><span class="hs-operator">.</span><span class="hs-identifier">DOM</span><span class="hs-operator">.</span><span class="hs-identifier">HTMLInputElement</span><span> </span><span class="hs-special">(</span><span class="hs-identifier hs-type">HTMLInputElement</span><span class="hs-special">)</span><span>
+</span><a name="line-40"></a><span class="hs-keyword">import</span><span> </span><span class="hs-identifier">GHCJS</span><span class="hs-operator">.</span><span class="hs-identifier">DOM</span><span class="hs-operator">.</span><span class="hs-identifier">HTMLTextAreaElement</span><span> </span><span class="hs-special">(</span><span class="hs-identifier hs-type">HTMLTextAreaElement</span><span class="hs-special">)</span><span>
+</span><a name="line-41"></a><span class="hs-keyword">import</span><span> </span><span class="hs-identifier">GHCJS</span><span class="hs-operator">.</span><span class="hs-identifier">DOM</span><span class="hs-operator">.</span><span class="hs-identifier">Types</span><span> </span><span class="hs-special">(</span><span class="hs-identifier hs-type">MonadJSM</span><span class="hs-special">,</span><span> </span><span class="hs-identifier hs-type">File</span><span class="hs-special">,</span><span> </span><span class="hs-identifier hs-var">uncheckedCastTo</span><span class="hs-special">)</span><span>
+</span><a name="line-42"></a><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-identifier">GHCJS</span><span class="hs-operator">.</span><span class="hs-identifier">DOM</span><span class="hs-operator">.</span><span class="hs-identifier">Types</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="hs-identifier">DOM</span><span> </span><span class="hs-special">(</span><span class="hs-identifier hs-type">HTMLElement</span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="hs-identifier hs-type">EventTarget</span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><a name="line-43"></a><span class="hs-keyword">import</span><span> </span><span class="hs-identifier">Reflex</span><span class="hs-operator">.</span><span class="hs-identifier">Class</span><span>
+</span><a name="line-44"></a><span class="hs-keyword">import</span><span> </span><a href="Reflex.Dom.Builder.Class.html"><span class="hs-identifier">Reflex</span><span class="hs-operator">.</span><span class="hs-identifier">Dom</span><span class="hs-operator">.</span><span class="hs-identifier">Builder</span><span class="hs-operator">.</span><span class="hs-identifier">Class</span></a><span>
+</span><a name="line-45"></a><span class="hs-keyword">import</span><span> </span><a href="Reflex.Dom.Builder.Immediate.html"><span class="hs-identifier">Reflex</span><span class="hs-operator">.</span><span class="hs-identifier">Dom</span><span class="hs-operator">.</span><span class="hs-identifier">Builder</span><span class="hs-operator">.</span><span class="hs-identifier">Immediate</span></a><span>
+</span><a name="line-46"></a><span class="hs-keyword">import</span><span> </span><a href="Reflex.Dom.Class.html"><span class="hs-identifier">Reflex</span><span class="hs-operator">.</span><span class="hs-identifier">Dom</span><span class="hs-operator">.</span><span class="hs-identifier">Class</span></a><span>
+</span><a name="line-47"></a><span class="hs-keyword">import</span><span> </span><a href="Reflex.Dom.Widget.Basic.html"><span class="hs-identifier">Reflex</span><span class="hs-operator">.</span><span class="hs-identifier">Dom</span><span class="hs-operator">.</span><span class="hs-identifier">Widget</span><span class="hs-operator">.</span><span class="hs-identifier">Basic</span></a><span>
+</span><a name="line-48"></a><span class="hs-keyword">import</span><span> </span><span class="hs-identifier">Reflex</span><span class="hs-operator">.</span><span class="hs-identifier">Dynamic</span><span>
+</span><a name="line-49"></a><span class="hs-keyword">import</span><span> </span><span class="hs-identifier">Reflex</span><span class="hs-operator">.</span><span class="hs-identifier">PostBuild</span><span class="hs-operator">.</span><span class="hs-identifier">Class</span><span>
+</span><a name="line-50"></a><span class="hs-keyword">import</span><span> </span><span class="hs-identifier">Reflex</span><span class="hs-operator">.</span><span class="hs-identifier">TriggerEvent</span><span class="hs-operator">.</span><span class="hs-identifier">Class</span><span>
+</span><a name="line-51"></a><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-identifier">Text</span><span class="hs-operator">.</span><span class="hs-identifier">Read</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="hs-identifier">T</span><span>
+</span><a name="line-52"></a><span>
+</span><a name="line-53"></a><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-identifier">GHCJS</span><span class="hs-operator">.</span><span class="hs-identifier">DOM</span><span class="hs-operator">.</span><span class="hs-identifier">Event</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="hs-identifier">Event</span><span>
+</span><a name="line-54"></a><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-identifier">GHCJS</span><span class="hs-operator">.</span><span class="hs-identifier">DOM</span><span class="hs-operator">.</span><span class="hs-identifier">HTMLInputElement</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="hs-identifier">Input</span><span>
+</span><a name="line-55"></a><span>
+</span><a name="line-56"></a><span class="hs-keyword">data</span><span> </span><a name="TextInput"><a href="Reflex.Dom.Widget.Input.html#TextInput"><span class="hs-identifier">TextInput</span></a></a><span> </span><a name="local-6989586621680320653"><a href="#local-6989586621680320653"><span class="hs-identifier">t</span></a></a><span>
+</span><a name="line-57"></a><span>   </span><span class="hs-glyph">=</span><span> </span><a name="TextInput"><a href="Reflex.Dom.Widget.Input.html#TextInput"><span class="hs-identifier">TextInput</span></a></a><span> </span><span class="hs-special">{</span><span> </span><a name="_textInput_value"><a href="Reflex.Dom.Widget.Input.html#_textInput_value"><span class="hs-identifier">_textInput_value</span></a></a><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-identifier hs-type">Dynamic</span><span> </span><a href="#local-6989586621680320653"><span class="hs-identifier hs-type">t</span></a><span> </span><span class="hs-identifier hs-type">Text</span><span>
+</span><a name="line-58"></a><span>               </span><span class="hs-special">,</span><span> </span><a name="_textInput_input"><a href="Reflex.Dom.Widget.Input.html#_textInput_input"><span class="hs-identifier">_textInput_input</span></a></a><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-identifier hs-type">Event</span><span> </span><a href="#local-6989586621680320653"><span class="hs-identifier hs-type">t</span></a><span> </span><span class="hs-identifier hs-type">Text</span><span>
+</span><a name="line-59"></a><span>               </span><span class="hs-special">,</span><span> </span><a name="_textInput_keypress"><a href="Reflex.Dom.Widget.Input.html#_textInput_keypress"><span class="hs-identifier">_textInput_keypress</span></a></a><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-identifier hs-type">Event</span><span> </span><a href="#local-6989586621680320653"><span class="hs-identifier hs-type">t</span></a><span> </span><span class="hs-identifier hs-type">Word</span><span>
+</span><a name="line-60"></a><span>               </span><span class="hs-special">,</span><span> </span><a name="_textInput_keydown"><a href="Reflex.Dom.Widget.Input.html#_textInput_keydown"><span class="hs-identifier">_textInput_keydown</span></a></a><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-identifier hs-type">Event</span><span> </span><a href="#local-6989586621680320653"><span class="hs-identifier hs-type">t</span></a><span> </span><span class="hs-identifier hs-type">Word</span><span>
+</span><a name="line-61"></a><span>               </span><span class="hs-special">,</span><span> </span><a name="_textInput_keyup"><a href="Reflex.Dom.Widget.Input.html#_textInput_keyup"><span class="hs-identifier">_textInput_keyup</span></a></a><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-identifier hs-type">Event</span><span> </span><a href="#local-6989586621680320653"><span class="hs-identifier hs-type">t</span></a><span> </span><span class="hs-identifier hs-type">Word</span><span>
+</span><a name="line-62"></a><span>               </span><span class="hs-special">,</span><span> </span><a name="_textInput_hasFocus"><a href="Reflex.Dom.Widget.Input.html#_textInput_hasFocus"><span class="hs-identifier">_textInput_hasFocus</span></a></a><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-identifier hs-type">Dynamic</span><span> </span><a href="#local-6989586621680320653"><span class="hs-identifier hs-type">t</span></a><span> </span><span class="hs-identifier hs-type">Bool</span><span>
+</span><a name="line-63"></a><span>               </span><span class="hs-special">,</span><span> </span><a name="_textInput_builderElement"><a href="Reflex.Dom.Widget.Input.html#_textInput_builderElement"><span class="hs-identifier">_textInput_builderElement</span></a></a><span> </span><span class="hs-glyph">::</span><span> </span><a href="Reflex.Dom.Builder.Class.html#InputElement"><span class="hs-identifier hs-type">InputElement</span></a><span> </span><a href="Reflex.Dom.Builder.Class.Events.html#EventResult"><span class="hs-identifier hs-type">EventResult</span></a><span> </span><a href="Reflex.Dom.Builder.Immediate.html#GhcjsDomSpace"><span class="hs-identifier hs-type">GhcjsDomSpace</span></a><span> </span><a href="#local-6989586621680320653"><span class="hs-identifier hs-type">t</span></a><span>
+</span><a name="line-64"></a><span>               </span><span class="hs-special">}</span><span>
+</span><a name="line-65"></a><span>
+</span><a name="line-66"></a><span class="hs-identifier">_textInput_element</span><span> </span><span class="hs-glyph">::</span><span> </span><a href="Reflex.Dom.Widget.Input.html#TextInput"><span class="hs-identifier hs-type">TextInput</span></a><span> </span><a href="#local-6989586621680320674"><span class="hs-identifier hs-type">t</span></a><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-identifier hs-type">HTMLInputElement</span><span>
+</span><a name="line-67"></a><a name="_textInput_element"><a href="Reflex.Dom.Widget.Input.html#_textInput_element"><span class="hs-identifier">_textInput_element</span></a></a><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-identifier">_inputElement_raw</span><span> </span><span class="hs-operator hs-var">.</span><span> </span><span class="hs-identifier">_textInput_builderElement</span><span>
+</span><a name="line-68"></a><span>
+</span><a name="line-69"></a><span class="hs-keyword">instance</span><span> </span><span class="hs-identifier hs-type">Reflex</span><span> </span><a href="#local-6989586621680320773"><span class="hs-identifier hs-type">t</span></a><span> </span><span class="hs-glyph">=&gt;</span><span> </span><a href="Reflex.Dom.Builder.Class.html#HasDomEvent"><span class="hs-identifier hs-type">HasDomEvent</span></a><span> </span><a href="#local-6989586621680320773"><span class="hs-identifier hs-type">t</span></a><span> </span><span class="hs-special">(</span><a href="Reflex.Dom.Widget.Input.html#TextInput"><span class="hs-identifier hs-type">TextInput</span></a><span> </span><a href="#local-6989586621680320773"><span class="hs-identifier hs-type">t</span></a><span class="hs-special">)</span><span> </span><a href="#local-6989586621680320774"><span class="hs-identifier hs-type">en</span></a><span> </span><span class="hs-keyword">where</span><span>
+</span><a name="line-70"></a><span>  </span><span class="hs-keyword">type</span><span> </span><span class="hs-identifier">DomEventType</span><span> </span><span class="hs-special">(</span><a href="Reflex.Dom.Widget.Input.html#TextInput"><span class="hs-identifier hs-type">TextInput</span></a><span> </span><a href="#local-6989586621680320773"><span class="hs-identifier hs-type">t</span></a><span class="hs-special">)</span><span> </span><a href="#local-6989586621680320774"><span class="hs-identifier hs-type">en</span></a><span> </span><span class="hs-glyph">=</span><span> </span><a href="Reflex.Dom.Builder.Class.html#DomEventType"><span class="hs-identifier hs-type">DomEventType</span></a><span> </span><span class="hs-special">(</span><a href="Reflex.Dom.Builder.Class.html#InputElement"><span class="hs-identifier hs-type">InputElement</span></a><span> </span><a href="Reflex.Dom.Builder.Class.Events.html#EventResult"><span class="hs-identifier hs-type">EventResult</span></a><span> </span><a href="Reflex.Dom.Builder.Immediate.html#GhcjsDomSpace"><span class="hs-identifier hs-type">GhcjsDomSpace</span></a><span> </span><a href="#local-6989586621680320773"><span class="hs-identifier hs-type">t</span></a><span class="hs-special">)</span><span> </span><a href="#local-6989586621680320774"><span class="hs-identifier hs-type">en</span></a><span>
+</span><a name="line-71"></a><span>  </span><a name="local-8214565720324099914"><a href="Reflex.Dom.Builder.Class.html#domEvent"><span class="hs-identifier">domEvent</span></a></a><span> </span><a name="local-6989586621680320775"><a href="#local-6989586621680320775"><span class="hs-identifier">en</span></a></a><span> </span><span class="hs-glyph">=</span><span> </span><a href="Reflex.Dom.Builder.Class.html#domEvent"><span class="hs-identifier hs-var">domEvent</span></a><span> </span><a href="#local-6989586621680320775"><span class="hs-identifier hs-var">en</span></a><span> </span><span class="hs-operator hs-var">.</span><span> </span><span class="hs-identifier">_textInput_builderElement</span><span>
+</span><a name="line-72"></a><span>
+</span><a name="line-73"></a><span class="hs-keyword">data</span><span> </span><a name="TextInputConfig"><a href="Reflex.Dom.Widget.Input.html#TextInputConfig"><span class="hs-identifier">TextInputConfig</span></a></a><span> </span><a name="local-6989586621680320652"><a href="#local-6989586621680320652"><span class="hs-identifier">t</span></a></a><span>
+</span><a name="line-74"></a><span>   </span><span class="hs-glyph">=</span><span> </span><a name="TextInputConfig"><a href="Reflex.Dom.Widget.Input.html#TextInputConfig"><span class="hs-identifier">TextInputConfig</span></a></a><span> </span><span class="hs-special">{</span><span> </span><a name="_textInputConfig_inputType"><a href="Reflex.Dom.Widget.Input.html#_textInputConfig_inputType"><span class="hs-identifier">_textInputConfig_inputType</span></a></a><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-identifier hs-type">Text</span><span>
+</span><a name="line-75"></a><span>                     </span><span class="hs-special">,</span><span> </span><a name="_textInputConfig_initialValue"><a href="Reflex.Dom.Widget.Input.html#_textInputConfig_initialValue"><span class="hs-identifier">_textInputConfig_initialValue</span></a></a><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-identifier hs-type">Text</span><span>
+</span><a name="line-76"></a><span>                     </span><span class="hs-special">,</span><span> </span><a name="_textInputConfig_setValue"><a href="Reflex.Dom.Widget.Input.html#_textInputConfig_setValue"><span class="hs-identifier">_textInputConfig_setValue</span></a></a><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-identifier hs-type">Event</span><span> </span><a href="#local-6989586621680320652"><span class="hs-identifier hs-type">t</span></a><span> </span><span class="hs-identifier hs-type">Text</span><span>
+</span><a name="line-77"></a><span>                     </span><span class="hs-special">,</span><span> </span><a name="_textInputConfig_attributes"><a href="Reflex.Dom.Widget.Input.html#_textInputConfig_attributes"><span class="hs-identifier">_textInputConfig_attributes</span></a></a><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-identifier hs-type">Dynamic</span><span> </span><a href="#local-6989586621680320652"><span class="hs-identifier hs-type">t</span></a><span> </span><span class="hs-special">(</span><span class="hs-identifier hs-type">Map</span><span> </span><span class="hs-identifier hs-type">Text</span><span> </span><span class="hs-identifier hs-type">Text</span><span class="hs-special">)</span><span>
+</span><a name="line-78"></a><span>                     </span><span class="hs-special">}</span><span>
+</span><a name="line-79"></a><span>
+</span><a name="line-80"></a><span class="hs-keyword">instance</span><span> </span><span class="hs-identifier hs-type">Reflex</span><span> </span><a href="#local-6989586621680320772"><span class="hs-identifier hs-type">t</span></a><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="hs-identifier hs-type">Default</span><span> </span><span class="hs-special">(</span><a href="Reflex.Dom.Widget.Input.html#TextInputConfig"><span class="hs-identifier hs-type">TextInputConfig</span></a><span> </span><a href="#local-6989586621680320772"><span class="hs-identifier hs-type">t</span></a><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
+</span><a name="line-81"></a><span>  </span><span class="hs-pragma">{-# INLINABLE def #-}</span><span>
+</span><a name="line-82"></a><span>  </span><a name="local-8214565720323796809"><span class="hs-identifier">def</span></a><span> </span><span class="hs-glyph">=</span><span> </span><a href="Reflex.Dom.Widget.Input.html#TextInputConfig"><span class="hs-identifier hs-var">TextInputConfig</span></a><span> </span><span class="hs-special">{</span><span> </span><span class="hs-identifier">_textInputConfig_inputType</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-string">&quot;text&quot;</span><span>
+</span><a name="line-83"></a><span>                        </span><span class="hs-special">,</span><span> </span><span class="hs-identifier">_textInputConfig_initialValue</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-string">&quot;&quot;</span><span>
+</span><a name="line-84"></a><span>                        </span><span class="hs-special">,</span><span> </span><span class="hs-identifier">_textInputConfig_setValue</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-identifier hs-var">never</span><span>
+</span><a name="line-85"></a><span>                        </span><span class="hs-special">,</span><span> </span><span class="hs-identifier">_textInputConfig_attributes</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-identifier hs-var">constDyn</span><span> </span><span class="hs-identifier hs-var">mempty</span><span>
+</span><a name="line-86"></a><span>                        </span><span class="hs-special">}</span><span>
+</span><a name="line-87"></a><span>
+</span><a name="line-88"></a><span class="hs-comment">-- | Create an input whose value is a string.  By default, the &quot;type&quot; attribute is set to &quot;text&quot;, but it can be changed using the _textInputConfig_inputType field.  Note that only types for which the value is always a string will work - types whose value may be null will not work properly with this widget.</span><span>
+</span><a name="line-89"></a><span class="hs-pragma">{-# INLINABLE textInput #-}</span><span>
+</span><a name="line-90"></a><span class="hs-identifier">textInput</span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><a href="Reflex.Dom.Builder.Class.html#DomBuilder"><span class="hs-identifier hs-type">DomBuilder</span></a><span> </span><a href="#local-6989586621680320672"><span class="hs-identifier hs-type">t</span></a><span> </span><a href="#local-6989586621680320673"><span class="hs-identifier hs-type">m</span></a><span class="hs-special">,</span><span> </span><span class="hs-identifier hs-type">PostBuild</span><span> </span><a href="#local-6989586621680320672"><span class="hs-identifier hs-type">t</span></a><span> </span><a href="#local-6989586621680320673"><span class="hs-identifier hs-type">m</span></a><span class="hs-special">,</span><span> </span><a href="Reflex.Dom.Builder.Class.html#DomBuilderSpace"><span class="hs-identifier hs-type">DomBuilderSpace</span></a><span> </span><a href="#local-6989586621680320673"><span class="hs-identifier hs-type">m</span></a><span> </span><span class="hs-glyph">~</span><span> </span><a href="Reflex.Dom.Builder.Immediate.html#GhcjsDomSpace"><span class="hs-identifier hs-type">GhcjsDomSpace</span></a><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><a href="Reflex.Dom.Widget.Input.html#TextInputConfig"><span class="hs-identifier hs-type">TextInputConfig</span></a><span> </span><a href="#local-6989586621680320672"><span class="hs-identifier hs-type">t</span></a><span> </span><span class="hs-glyph">-&gt;</span><span> </span><a href="#local-6989586621680320673"><span class="hs-identifier hs-type">m</span></a><span> </span><span class="hs-special">(</span><a href="Reflex.Dom.Widget.Input.html#TextInput"><span class="hs-identifier hs-type">TextInput</span></a><span> </span><a href="#local-6989586621680320672"><span class="hs-identifier hs-type">t</span></a><span class="hs-special">)</span><span>
+</span><a name="line-91"></a><a name="textInput"><a href="Reflex.Dom.Widget.Input.html#textInput"><span class="hs-identifier">textInput</span></a></a><span> </span><span class="hs-special">(</span><a href="Reflex.Dom.Widget.Input.html#TextInputConfig"><span class="hs-identifier hs-var">TextInputConfig</span></a><span> </span><a name="local-6989586621680320675"><a href="#local-6989586621680320675"><span class="hs-identifier">inputType</span></a></a><span> </span><a name="local-6989586621680320676"><a href="#local-6989586621680320676"><span class="hs-identifier">initial</span></a></a><span> </span><a name="local-6989586621680320677"><a href="#local-6989586621680320677"><span class="hs-identifier">eSetValue</span></a></a><span> </span><a name="local-6989586621680320678"><a href="#local-6989586621680320678"><span class="hs-identifier">dAttrs</span></a></a><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><a name="line-92"></a><span>  </span><a name="local-6989586621680320679"><a href="#local-6989586621680320679"><span class="hs-identifier">modifyAttrs</span></a></a><span> </span><span class="hs-glyph">&lt;-</span><span> </span><a href="Reflex.Dom.Widget.Basic.html#dynamicAttributesToModifyAttributes"><span class="hs-identifier hs-var">dynamicAttributesToModifyAttributes</span></a><span> </span><span class="hs-operator hs-var">$</span><span> </span><span class="hs-identifier hs-var">fmap</span><span> </span><span class="hs-special">(</span><span class="hs-identifier hs-var">Map</span><span class="hs-operator hs-var">.</span><span class="hs-identifier hs-var">insert</span><span> </span><span class="hs-string">&quot;type&quot;</span><span> </span><a href="#local-6989586621680320675"><span class="hs-identifier hs-var">inputType</span></a><span class="hs-special">)</span><span> </span><a href="#local-6989586621680320678"><span class="hs-identifier hs-var">dAttrs</span></a><span>
+</span><a name="line-93"></a><span>  </span><a name="local-6989586621680320680"><a href="#local-6989586621680320680"><span class="hs-identifier">i</span></a></a><span> </span><span class="hs-glyph">&lt;-</span><span> </span><a href="Reflex.Dom.Builder.Class.html#inputElement"><span class="hs-identifier hs-var">inputElement</span></a><span> </span><span class="hs-operator hs-var">$</span><span> </span><span class="hs-identifier hs-var">def</span><span>
+</span><a name="line-94"></a><span>    </span><span class="hs-operator hs-var">&amp;</span><span> </span><a href="Reflex.Dom.Builder.Class.html#inputElementConfig_initialValue"><span class="hs-identifier hs-var">inputElementConfig_initialValue</span></a><span> </span><span class="hs-operator hs-var">.~</span><span> </span><a href="#local-6989586621680320676"><span class="hs-identifier hs-var">initial</span></a><span>
+</span><a name="line-95"></a><span>    </span><span class="hs-operator hs-var">&amp;</span><span> </span><a href="Reflex.Dom.Builder.Class.html#inputElementConfig_setValue"><span class="hs-identifier hs-var">inputElementConfig_setValue</span></a><span> </span><span class="hs-operator hs-var">.~</span><span> </span><a href="#local-6989586621680320677"><span class="hs-identifier hs-var">eSetValue</span></a><span>
+</span><a name="line-96"></a><span>    </span><span class="hs-operator hs-var">&amp;</span><span> </span><a href="Reflex.Dom.Builder.Class.html#inputElementConfig_elementConfig"><span class="hs-identifier hs-var">inputElementConfig_elementConfig</span></a><span> </span><span class="hs-operator hs-var">.</span><span> </span><a href="Reflex.Dom.Builder.Class.html#elementConfig_modifyAttributes"><span class="hs-identifier hs-var">elementConfig_modifyAttributes</span></a><span> </span><span class="hs-operator hs-var">.~</span><span> </span><span class="hs-identifier hs-var">fmap</span><span> </span><a href="Reflex.Dom.Builder.Class.html#mapKeysToAttributeName"><span class="hs-identifier hs-var">mapKeysToAttributeName</span></a><span> </span><a href="#local-6989586621680320679"><span class="hs-identifier hs-var">modifyAttrs</span></a><span>
+</span><a name="line-97"></a><span>  </span><span class="hs-identifier hs-var">return</span><span> </span><span class="hs-operator hs-var">$</span><span> </span><a href="Reflex.Dom.Widget.Input.html#TextInput"><span class="hs-identifier hs-var">TextInput</span></a><span>
+</span><a name="line-98"></a><span>    </span><span class="hs-special">{</span><span> </span><span class="hs-identifier">_textInput_value</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-identifier">_inputElement_value</span><span> </span><a href="#local-6989586621680320680"><span class="hs-identifier hs-var">i</span></a><span>
+</span><a name="line-99"></a><span>    </span><span class="hs-special">,</span><span> </span><span class="hs-identifier">_textInput_input</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-identifier">_inputElement_input</span><span> </span><a href="#local-6989586621680320680"><span class="hs-identifier hs-var">i</span></a><span>
+</span><a name="line-100"></a><span>    </span><span class="hs-special">,</span><span> </span><span class="hs-identifier">_textInput_keypress</span><span> </span><span class="hs-glyph">=</span><span> </span><a href="Reflex.Dom.Builder.Class.html#domEvent"><span class="hs-identifier hs-var">domEvent</span></a><span> </span><a href="Reflex.Dom.Builder.Class.Events.html#Keypress"><span class="hs-identifier hs-var">Keypress</span></a><span> </span><a href="#local-6989586621680320680"><span class="hs-identifier hs-var">i</span></a><span>
+</span><a name="line-101"></a><span>    </span><span class="hs-special">,</span><span> </span><span class="hs-identifier">_textInput_keydown</span><span> </span><span class="hs-glyph">=</span><span> </span><a href="Reflex.Dom.Builder.Class.html#domEvent"><span class="hs-identifier hs-var">domEvent</span></a><span> </span><a href="Reflex.Dom.Builder.Class.Events.html#Keydown"><span class="hs-identifier hs-var">Keydown</span></a><span> </span><a href="#local-6989586621680320680"><span class="hs-identifier hs-var">i</span></a><span>
+</span><a name="line-102"></a><span>    </span><span class="hs-special">,</span><span> </span><span class="hs-identifier">_textInput_keyup</span><span> </span><span class="hs-glyph">=</span><span> </span><a href="Reflex.Dom.Builder.Class.html#domEvent"><span class="hs-identifier hs-var">domEvent</span></a><span> </span><a href="Reflex.Dom.Builder.Class.Events.html#Keyup"><span class="hs-identifier hs-var">Keyup</span></a><span> </span><a href="#local-6989586621680320680"><span class="hs-identifier hs-var">i</span></a><span>
+</span><a name="line-103"></a><span>    </span><span class="hs-special">,</span><span> </span><span class="hs-identifier">_textInput_hasFocus</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-identifier">_inputElement_hasFocus</span><span> </span><a href="#local-6989586621680320680"><span class="hs-identifier hs-var">i</span></a><span>
+</span><a name="line-104"></a><span>    </span><span class="hs-special">,</span><span> </span><span class="hs-identifier">_textInput_builderElement</span><span> </span><span class="hs-glyph">=</span><span> </span><a href="#local-6989586621680320680"><span class="hs-identifier hs-var">i</span></a><span>
+</span><a name="line-105"></a><span>    </span><span class="hs-special">}</span><span>
+</span><a name="line-106"></a><span>
+</span><a name="line-107"></a><span class="hs-pragma">{-# INLINE textInputGetEnter #-}</span><span>
+</span><a name="line-108"></a><span class="hs-pragma">{-# DEPRECATED textInputGetEnter &quot;Use 'keypress Enter' instead&quot; #-}</span><span>
+</span><a name="line-109"></a><span class="hs-identifier">textInputGetEnter</span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-identifier hs-type">Reflex</span><span> </span><a href="#local-6989586621680320671"><span class="hs-identifier hs-type">t</span></a><span> </span><span class="hs-glyph">=&gt;</span><span> </span><a href="Reflex.Dom.Widget.Input.html#TextInput"><span class="hs-identifier hs-type">TextInput</span></a><span> </span><a href="#local-6989586621680320671"><span class="hs-identifier hs-type">t</span></a><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-identifier hs-type">Event</span><span> </span><a href="#local-6989586621680320671"><span class="hs-identifier hs-type">t</span></a><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
+</span><a name="line-110"></a><a name="textInputGetEnter"><a href="Reflex.Dom.Widget.Input.html#textInputGetEnter"><span class="hs-identifier">textInputGetEnter</span></a></a><span> </span><span class="hs-glyph">=</span><span> </span><a href="Reflex.Dom.Widget.Input.html#keypress"><span class="hs-identifier hs-var">keypress</span></a><span> </span><span class="hs-identifier hs-var">Enter</span><span>
+</span><a name="line-111"></a><span>
+</span><a name="line-112"></a><span class="hs-pragma">{-# INLINABLE keypress #-}</span><span>
+</span><a name="line-113"></a><span class="hs-identifier">keypress</span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="hs-identifier hs-type">Reflex</span><span> </span><a href="#local-6989586621680320669"><span class="hs-identifier hs-type">t</span></a><span class="hs-special">,</span><span> </span><a href="Reflex.Dom.Builder.Class.html#HasDomEvent"><span class="hs-identifier hs-type">HasDomEvent</span></a><span> </span><a href="#local-6989586621680320669"><span class="hs-identifier hs-type">t</span></a><span> </span><a href="#local-6989586621680320670"><span class="hs-identifier hs-type">e</span></a><span> </span><span class="hs-char">'KeypressTag, DomEventType e 'KeypressTag ~ Word) =&gt; Key -&gt; e -&gt; Event t ()
+keypress key i = fmapMaybe (\n -&gt; if keyCodeLookup (fromIntegral n) == key then Just () else Nothing) $ domEvent Keypress i
+
+data RangeInputConfig t
+   = RangeInputConfig { _rangeInputConfig_initialValue :: Float
+                      , _rangeInputConfig_setValue :: Event t Float
+                      , _rangeInputConfig_attributes :: Dynamic t (Map Text Text)
+                      }
+
+instance Reflex t =&gt; Default (RangeInputConfig t) where
+  {-# INLINABLE def #-}
+  def = RangeInputConfig { _rangeInputConfig_initialValue = 0
+                        , _rangeInputConfig_setValue = never
+                        , _rangeInputConfig_attributes = constDyn mempty
+                        }
+
+data RangeInput t
+   = RangeInput { _rangeInput_value :: Dynamic t Float
+                , _rangeInput_input :: Event t Float
+                , _rangeInput_mouseup :: Event t (Int, Int)
+                , _rangeInput_hasFocus :: Dynamic t Bool
+                , _rangeInput_element :: HTMLInputElement
+                }
+
+-- | Create an input whose value is a float.
+--   https://www.w3.org/wiki/HTML/Elements/input/range
+{-# INLINABLE rangeInput #-}
+rangeInput :: (DomBuilder t m, PostBuild t m, DomBuilderSpace m ~ GhcjsDomSpace) =&gt; RangeInputConfig t -&gt; m (RangeInput t)
+rangeInput (RangeInputConfig initial eSetValue dAttrs) = do
+  modifyAttrs &lt;- dynamicAttributesToModifyAttributes $ fmap (Map.insert &quot;type&quot; &quot;range&quot;) dAttrs
+  i &lt;- inputElement $ def
+    &amp; inputElementConfig_initialValue .~ (T.pack . show $ initial)
+    &amp; inputElementConfig_setValue .~ (T.pack . show &lt;$&gt; eSetValue)
+    &amp; inputElementConfig_elementConfig . elementConfig_modifyAttributes .~ fmap mapKeysToAttributeName modifyAttrs
+  return $ RangeInput
+    { _rangeInput_value = read . T.unpack &lt;$&gt; _inputElement_value i
+    , _rangeInput_input = read . T.unpack &lt;$&gt; _inputElement_input i
+    , _rangeInput_mouseup = domEvent Mouseup i
+    , _rangeInput_hasFocus = _inputElement_hasFocus i
+    , _rangeInput_element = _inputElement_raw i
+    }
+
+data TextAreaConfig t
+   = TextAreaConfig { _textAreaConfig_initialValue :: Text
+                    , _textAreaConfig_setValue :: Event t Text
+                    , _textAreaConfig_attributes :: Dynamic t (Map Text Text)
+                    }
+
+instance Reflex t =&gt; Default (TextAreaConfig t) where
+  {-# INLINABLE def #-}
+  def = TextAreaConfig { _textAreaConfig_initialValue = &quot;&quot;
+                       , _textAreaConfig_setValue = never
+                       , _textAreaConfig_attributes = constDyn mempty
+                       }
+
+data TextArea t
+   = TextArea { _textArea_value :: Dynamic t Text
+              , _textArea_input :: Event t Text
+              , _textArea_hasFocus :: Dynamic t Bool
+              , _textArea_keypress :: Event t Word
+              , _textArea_element :: HTMLTextAreaElement
+              }
+
+{-# INLINABLE textArea #-}
+textArea :: (DomBuilder t m, PostBuild t m, DomBuilderSpace m ~ GhcjsDomSpace) =&gt; TextAreaConfig t -&gt; m (TextArea t)
+textArea (TextAreaConfig initial eSet attrs) = do
+  modifyAttrs &lt;- dynamicAttributesToModifyAttributes attrs
+  i &lt;- textAreaElement $ def
+    &amp; textAreaElementConfig_initialValue .~ initial
+    &amp; textAreaElementConfig_setValue .~ eSet
+    &amp; textAreaElementConfig_elementConfig . elementConfig_modifyAttributes .~ fmap mapKeysToAttributeName modifyAttrs
+  return $ TextArea
+    { _textArea_value = _textAreaElement_value i
+    , _textArea_input = _textAreaElement_input i
+    , _textArea_keypress = domEvent Keypress i
+    , _textArea_hasFocus = _textAreaElement_hasFocus i
+    , _textArea_element = _textAreaElement_raw i
+    }
+
+data CheckboxConfig t
+    = CheckboxConfig { _checkboxConfig_setValue :: Event t Bool
+                     , _checkboxConfig_attributes :: Dynamic t (Map Text Text)
+                     }
+
+instance Reflex t =&gt; Default (CheckboxConfig t) where
+  {-# INLINABLE def #-}
+  def = CheckboxConfig { _checkboxConfig_setValue = never
+                       , _checkboxConfig_attributes = constDyn mempty
+                       }
+
+data Checkbox t
+   = Checkbox { _checkbox_value :: Dynamic t Bool
+              , _checkbox_change :: Event t Bool
+              }
+
+-- | Create an editable checkbox
+--   Note: if the &quot;type&quot; or &quot;checked&quot; attributes are provided as attributes, they will be ignored
+{-# INLINABLE checkbox #-}
+checkbox :: (DomBuilder t m, PostBuild t m) =&gt; Bool -&gt; CheckboxConfig t -&gt; m (Checkbox t)
+checkbox checked config = do
+  let permanentAttrs = &quot;type&quot; =: &quot;checkbox&quot;
+      dAttrs = Map.delete &quot;checked&quot; . Map.union permanentAttrs &lt;$&gt; _checkboxConfig_attributes config
+  modifyAttrs &lt;- dynamicAttributesToModifyAttributes dAttrs
+  i &lt;- inputElement $ def
+    &amp; inputElementConfig_initialChecked .~ checked
+    &amp; inputElementConfig_setChecked .~ _checkboxConfig_setValue config
+    &amp; inputElementConfig_elementConfig . elementConfig_initialAttributes .~ Map.mapKeys (AttributeName Nothing) permanentAttrs
+    &amp; inputElementConfig_elementConfig . elementConfig_modifyAttributes .~ fmap mapKeysToAttributeName modifyAttrs
+  return $ Checkbox
+    { _checkbox_value = _inputElement_checked i
+    , _checkbox_change = _inputElement_checkedChange i
+    }
+
+type family CheckboxViewEventResultType (en :: EventTag) :: * where
+  CheckboxViewEventResultType 'ClickTag = Bool
+  CheckboxViewEventResultType t = EventResultType t
+
+regularToCheckboxViewEventType :: EventName t -&gt; EventResultType t -&gt; CheckboxViewEventResultType t
+regularToCheckboxViewEventType en r = case en of
+  Click -&gt; error &quot;regularToCheckboxViewEventType: EventName Click should never be encountered&quot;
+  Abort -&gt; r
+  Blur -&gt; r
+  Change -&gt; r
+  Contextmenu -&gt; r
+  Dblclick -&gt; r
+  Drag -&gt; r
+  Dragend -&gt; r
+  Dragenter -&gt; r
+  Dragleave -&gt; r
+  Dragover -&gt; r
+  Dragstart -&gt; r
+  Drop -&gt; r
+  Error -&gt; r
+  Focus -&gt; r
+  Input -&gt; r
+  Invalid -&gt; r
+  Keydown -&gt; r
+  Keypress -&gt; r
+  Keyup -&gt; r
+  Load -&gt; r
+  Mousedown -&gt; r
+  Mouseenter -&gt; r
+  Mouseleave -&gt; r
+  Mousemove -&gt; r
+  Mouseout -&gt; r
+  Mouseover -&gt; r
+  Mouseup -&gt; r
+  Mousewheel -&gt; r
+  Scroll -&gt; r
+  Select -&gt; r
+  Submit -&gt; r
+  Wheel -&gt; r
+  Beforecut -&gt; r
+  Cut -&gt; r
+  Beforecopy -&gt; r
+  Copy -&gt; r
+  Beforepaste -&gt; r
+  Paste -&gt; r
+  Reset -&gt; r
+  Search -&gt; r
+  Selectstart -&gt; r
+  Touchstart -&gt; r
+  Touchmove -&gt; r
+  Touchend -&gt; r
+  Touchcancel -&gt; r
+
+newtype CheckboxViewEventResult en = CheckboxViewEventResult { unCheckboxViewEventResult :: CheckboxViewEventResultType en }
+
+--TODO
+{-# INLINABLE checkboxView #-}
+checkboxView :: forall t m. (DomBuilder t m, DomBuilderSpace m ~ GhcjsDomSpace, PostBuild t m, MonadHold t m) =&gt; Dynamic t (Map Text Text) -&gt; Dynamic t Bool -&gt; m (Event t Bool)
+checkboxView dAttrs dValue = do
+  let permanentAttrs = &quot;type&quot; =: &quot;checkbox&quot;
+  modifyAttrs &lt;- dynamicAttributesToModifyAttributes $ fmap (Map.union permanentAttrs) dAttrs
+  postBuild &lt;- getPostBuild
+  let filters :: DMap EventName (GhcjsEventFilter CheckboxViewEventResult)
+      filters = DMap.singleton Click $ GhcjsEventFilter $ \(GhcjsDomEvent evt) -&gt; do
+        t &lt;- Event.getTargetUnchecked evt
+        b &lt;- Input.getChecked $ uncheckedCastTo Input.HTMLInputElement t
+        return $ (,) preventDefault $ return $ Just $ CheckboxViewEventResult b
+      elementConfig :: ElementConfig CheckboxViewEventResult t (DomBuilderSpace m)
+      elementConfig = (def :: ElementConfig EventResult t (DomBuilderSpace m))
+        { _elementConfig_modifyAttributes = Just $ fmap mapKeysToAttributeName modifyAttrs
+        , _elementConfig_initialAttributes = Map.mapKeys (AttributeName Nothing) permanentAttrs
+        , _elementConfig_eventSpec = GhcjsEventSpec
+            { _ghcjsEventSpec_filters = filters
+            , _ghcjsEventSpec_handler = GhcjsEventHandler $ \(en, GhcjsDomEvent evt) -&gt; case en of
+                Click -&gt; error &quot;impossible&quot;
+                _ -&gt; do
+                  e :: DOM.EventTarget &lt;- withIsEvent en $ Event.getTargetUnchecked evt
+                  let myElement = uncheckedCastTo DOM.HTMLElement e
+                  mr &lt;- runReaderT (defaultDomEventHandler myElement en) evt
+                  return $ ffor mr $ \(EventResult r) -&gt; CheckboxViewEventResult $ regularToCheckboxViewEventType en r
+            }
+        }
+      inputElementConfig :: InputElementConfig CheckboxViewEventResult t (DomBuilderSpace m)
+      inputElementConfig = (def :: InputElementConfig EventResult t (DomBuilderSpace m))
+        &amp; inputElementConfig_setChecked .~ leftmost [updated dValue, tag (current dValue) postBuild]
+        &amp; inputElementConfig_elementConfig .~ elementConfig
+  i &lt;- inputElement inputElementConfig
+  return $ unCheckboxViewEventResult &lt;$&gt; select (_element_events $ _inputElement_element i) (WrapArg Click)
+
+data FileInput d t
+   = FileInput { _fileInput_value :: Dynamic t [File]
+               , _fileInput_element :: RawInputElement d
+               }
+
+newtype FileInputConfig t
+   = FileInputConfig { _fileInputConfig_attributes :: Dynamic t (Map Text Text)
+                     }
+
+instance Reflex t =&gt; Default (FileInputConfig t) where
+  def = FileInputConfig { _fileInputConfig_attributes = constDyn mempty
+                        }
+
+fileInput :: forall t m. (MonadIO m, MonadJSM m, MonadFix m, MonadHold t m, TriggerEvent t m, DomBuilder t m, PostBuild t m, DomBuilderSpace m ~ GhcjsDomSpace)
+          =&gt; FileInputConfig t -&gt; m (FileInput (DomBuilderSpace m) t)
+fileInput config = do
+  let insertType = Map.insert &quot;type&quot; &quot;file&quot;
+      dAttrs = insertType &lt;$&gt; _fileInputConfig_attributes config
+  modifyAttrs &lt;- dynamicAttributesToModifyAttributes dAttrs
+  let filters = DMap.singleton Change . GhcjsEventFilter $ \_ -&gt; do
+        return . (,) mempty $ return . Just $ EventResult ()
+      elCfg = (def :: ElementConfig EventResult t (DomBuilderSpace m))
+        &amp; modifyAttributes .~ fmap mapKeysToAttributeName modifyAttrs
+        &amp; elementConfig_eventSpec . ghcjsEventSpec_filters .~ filters
+      cfg = (def :: InputElementConfig EventResult t (DomBuilderSpace m)) &amp; inputElementConfig_elementConfig .~ elCfg
+  eRaw &lt;- inputElement cfg
+  let e = _inputElement_raw eRaw
+  eChange &lt;- wrapDomEvent e (`on` Events.change) $ do
+      files &lt;- Input.getFilesUnchecked e
+      len &lt;- FileList.getLength files
+      mapM (fmap (fromMaybe (error &quot;fileInput: fileList.item returned null&quot;)) . FileList.item files) [0 .. len-1]
+  dValue &lt;- holdDyn [] eChange
+  return $ FileInput
+    { _fileInput_value = dValue
+    , _fileInput_element = e
+    }
+
+data Dropdown t k
+    = Dropdown { _dropdown_value :: Dynamic t k
+               , _dropdown_change :: Event t k
+               }
+
+data DropdownConfig t k
+   = DropdownConfig { _dropdownConfig_setValue :: Event t k
+                    , _dropdownConfig_attributes :: Dynamic t (Map Text Text)
+                    }
+
+instance Reflex t =&gt; Default (DropdownConfig t k) where
+  def = DropdownConfig { _dropdownConfig_setValue = never
+                       , _dropdownConfig_attributes = constDyn mempty
+                       }
+
+type family DropdownViewEventResultType (en :: EventTag) :: * where
+  DropdownViewEventResultType 'ChangeTag = Text
+  DropdownViewEventResultType t = EventResultType t
+
+newtype DropdownViewEventResult en = DropdownViewEventResult { unDropdownViewEventResult :: DropdownViewEventResultType en }
+
+regularToDropdownViewEventType :: EventName t -&gt; EventResultType t -&gt; DropdownViewEventResultType t
+regularToDropdownViewEventType en r = case en of
+  Change -&gt; error &quot;regularToDropdownViewEventType: EventName Change should never be encountered&quot;
+  Abort -&gt; r
+  Blur -&gt; r
+  Click -&gt; r
+  Contextmenu -&gt; r
+  Dblclick -&gt; r
+  Drag -&gt; r
+  Dragend -&gt; r
+  Dragenter -&gt; r
+  Dragleave -&gt; r
+  Dragover -&gt; r
+  Dragstart -&gt; r
+  Drop -&gt; r
+  Error -&gt; r
+  Focus -&gt; r
+  Input -&gt; r
+  Invalid -&gt; r
+  Keydown -&gt; r
+  Keypress -&gt; r
+  Keyup -&gt; r
+  Load -&gt; r
+  Mousedown -&gt; r
+  Mouseenter -&gt; r
+  Mouseleave -&gt; r
+  Mousemove -&gt; r
+  Mouseout -&gt; r
+  Mouseover -&gt; r
+  Mouseup -&gt; r
+  Mousewheel -&gt; r
+  Scroll -&gt; r
+  Select -&gt; r
+  Submit -&gt; r
+  Wheel -&gt; r
+  Beforecut -&gt; r
+  Cut -&gt; r
+  Beforecopy -&gt; r
+  Copy -&gt; r
+  Beforepaste -&gt; r
+  Paste -&gt; r
+  Reset -&gt; r
+  Search -&gt; r
+  Selectstart -&gt; r
+  Touchstart -&gt; r
+  Touchmove -&gt; r
+  Touchend -&gt; r
+  Touchcancel -&gt; r
+
+--TODO: We should allow the user to specify an ordering instead of relying on the ordering of the Map
+-- | Create a dropdown box
+--   The first argument gives the initial value of the dropdown; if it is not present in the map of options provided, it will be added with an empty string as its text
+dropdown :: forall k t m. (DomBuilder t m, MonadFix m, MonadHold t m, PostBuild t m, Ord k) =&gt; k -&gt; Dynamic t (Map k Text) -&gt; DropdownConfig t k -&gt; m (Dropdown t k)
+dropdown k0 options (DropdownConfig setK attrs) = do
+  optionsWithAddedKeys &lt;- fmap (zipDynWith Map.union options) $ foldDyn Map.union (k0 =: &quot;&quot;) $ fmap (=: &quot;&quot;) setK
+  defaultKey &lt;- holdDyn k0 setK
+  let (indexedOptions, ixKeys) = splitDynPure $ ffor optionsWithAddedKeys $ \os -&gt;
+        let xs = fmap (\(ix, (k, v)) -&gt; ((ix, k), ((ix, k), v))) $ zip [0::Int ..] $ Map.toList os
+        in (Map.fromList $ map snd xs, Bimap.fromList $ map fst xs)
+  modifyAttrs &lt;- dynamicAttributesToModifyAttributes attrs
+  let cfg = def
+        &amp; selectElementConfig_elementConfig . elementConfig_modifyAttributes .~ fmap mapKeysToAttributeName modifyAttrs
+        &amp; selectElementConfig_setValue .~ fmap (T.pack . show) (attachPromptlyDynWithMaybe (flip Bimap.lookupR) ixKeys setK)
+  (eRaw, _) &lt;- selectElement cfg $ listWithKey indexedOptions $ \(ix, k) v -&gt; do
+    let optionAttrs = fmap (\dk -&gt; &quot;value&quot; =: T.pack (show ix) &lt;&gt; if dk == k then &quot;selected&quot; =: &quot;selected&quot; else mempty) defaultKey
+    elDynAttr &quot;option&quot; optionAttrs $ dynText v
+  let lookupSelected ks v = do
+        key &lt;- T.readMaybe $ T.unpack v
+        Bimap.lookup key ks
+  let eChange = attachPromptlyDynWith lookupSelected ixKeys $ _selectElement_change eRaw
+  let readKey keys mk = fromMaybe k0 $ do
+        k &lt;- mk
+        guard $ Bimap.memberR k keys
+        return k
+  dValue &lt;- fmap (zipDynWith readKey ixKeys) $ holdDyn (Just k0) $ leftmost [eChange, fmap Just setK]
+  return $ Dropdown dValue (attachPromptlyDynWith readKey ixKeys eChange)
+
+#ifdef USE_TEMPLATE_HASKELL
+concat &lt;$&gt; mapM makeLenses
+  [ ''TextAreaConfig
+  , ''TextArea
+  , ''TextInputConfig
+  , ''TextInput
+  , ''RangeInputConfig
+  , ''RangeInput
+  , ''FileInputConfig
+  , ''FileInput
+  , ''DropdownConfig
+  , ''Dropdown
+  , ''CheckboxConfig
+  , ''Checkbox
+  ]
+#else
+textAreaConfig_attributes :: Lens' (TextAreaConfig t) (Dynamic t (Map Text Text))
+textAreaConfig_attributes f (TextAreaConfig x1 x2 x3) = (\y -&gt; TextAreaConfig x1 x2 y) &lt;$&gt; f x3
+{-# INLINE textAreaConfig_attributes #-}
+textAreaConfig_initialValue :: Lens' (TextAreaConfig t) Text
+textAreaConfig_initialValue f (TextAreaConfig x1 x2 x3) = (\y -&gt; TextAreaConfig y x2 x3) &lt;$&gt; f x1
+{-# INLINE textAreaConfig_initialValue #-}
+textAreaConfig_setValue :: Lens' (TextAreaConfig t) (Event t Text)
+textAreaConfig_setValue f (TextAreaConfig x1 x2 x3) = (\y -&gt; TextAreaConfig x1 y x3) &lt;$&gt; f x2
+{-# INLINE textAreaConfig_setValue #-}
+textArea_element :: Lens' (TextArea t) HTMLTextAreaElement
+textArea_element f (TextArea x1 x2 x3 x4 x5) = (\y -&gt; TextArea x1 x2 x3 x4 y) &lt;$&gt; f x5
+{-# INLINE textArea_element #-}
+textArea_hasFocus :: Lens' (TextArea t) (Dynamic t Bool)
+textArea_hasFocus f (TextArea x1 x2 x3 x4 x5) = (\y -&gt; TextArea x1 x2 y x4 x5) &lt;$&gt; f x3
+{-# INLINE textArea_hasFocus #-}
+textArea_input :: Lens' (TextArea t) (Event t Text)
+textArea_input f (TextArea x1 x2 x3 x4 x5) = (\y -&gt; TextArea x1 y x3 x4 x5) &lt;$&gt; f x2
+{-# INLINE textArea_input #-}
+textArea_keypress :: Lens' (TextArea t) (Event t Word)
+textArea_keypress f (TextArea x1 x2 x3 x4 x5) = (\y -&gt; TextArea x1 x2 x3 y x5) &lt;$&gt; f x4
+{-# INLINE textArea_keypress #-}
+textArea_value :: Lens' (TextArea t) (Dynamic t Text)
+textArea_value f (TextArea x1 x2 x3 x4 x5) = (\y -&gt; TextArea y x2 x3 x4 x5) &lt;$&gt; f x1
+{-# INLINE textArea_value #-}
+textInputConfig_attributes :: Lens' (TextInputConfig t) (Dynamic t (Map Text Text))
+textInputConfig_attributes f (TextInputConfig x1 x2 x3 x4) = (\y -&gt; TextInputConfig x1 x2 x3 y) &lt;$&gt; f x4
+{-# INLINE textInputConfig_attributes #-}
+textInputConfig_initialValue :: Lens' (TextInputConfig t) Text
+textInputConfig_initialValue f (TextInputConfig x1 x2 x3 x4) = (\y -&gt; TextInputConfig x1 y x3 x4) &lt;$&gt; f x2
+{-# INLINE textInputConfig_initialValue #-}
+textInputConfig_inputType :: Lens' (TextInputConfig t) Text
+textInputConfig_inputType f (TextInputConfig x1 x2 x3 x4) = (\y -&gt; TextInputConfig y x2 x3 x4) &lt;$&gt; f x1
+{-# INLINE textInputConfig_inputType #-}
+textInputConfig_setValue :: Lens' (TextInputConfig t) (Event t Text)
+textInputConfig_setValue f (TextInputConfig x1 x2 x3 x4) = (\y -&gt; TextInputConfig x1 x2 y x4) &lt;$&gt; f x3
+{-# INLINE textInputConfig_setValue #-}
+textInput_builderElement :: Lens' (TextInput t) (InputElement EventResult GhcjsDomSpace t)
+textInput_builderElement f (TextInput x1 x2 x3 x4 x5 x6 x7) = (\y -&gt; TextInput x1 x2 x3 x4 x5 x6 y) &lt;$&gt; f x7
+{-# INLINE textInput_builderElement #-}
+textInput_hasFocus :: Lens' (TextInput t) (Dynamic t Bool)
+textInput_hasFocus f (TextInput x1 x2 x3 x4 x5 x6 x7) = (\y -&gt; TextInput x1 x2 x3 x4 x5 y x7) &lt;$&gt; f x6
+{-# INLINE textInput_hasFocus #-}
+textInput_input :: Lens' (TextInput t) (Event t Text)
+textInput_input f (TextInput x1 x2 x3 x4 x5 x6 x7) = (\y -&gt; TextInput x1 y x3 x4 x5 x6 x7) &lt;$&gt; f x2
+{-# INLINE textInput_input #-}
+textInput_keydown :: Lens' (TextInput t) (Event t Word)
+textInput_keydown f (TextInput x1 x2 x3 x4 x5 x6 x7) = (\y -&gt; TextInput x1 x2 x3 y x5 x6 x7) &lt;$&gt; f x4
+{-# INLINE textInput_keydown #-}
+textInput_keypress :: Lens' (TextInput t) (Event t Word)
+textInput_keypress f (TextInput x1 x2 x3 x4 x5 x6 x7) = (\y -&gt; TextInput x1 x2 y x4 x5 x6 x7) &lt;$&gt; f x3
+{-# INLINE textInput_keypress #-}
+textInput_keyup :: Lens' (TextInput t) (Event t Word)
+textInput_keyup f (TextInput x1 x2 x3 x4 x5 x6 x7) = (\y -&gt; TextInput x1 x2 x3 x4 y x6 x7) &lt;$&gt; f x5
+{-# INLINE textInput_keyup #-}
+textInput_value :: Lens' (TextInput t) (Dynamic t Text)
+textInput_value f (TextInput x1 x2 x3 x4 x5 x6 x7) = (\y -&gt; TextInput y x2 x3 x4 x5 x6 x7) &lt;$&gt; f x1
+{-# INLINE textInput_value #-}
+rangeInputConfig_attributes :: Lens' (RangeInputConfig t) (Dynamic t (Map Text Text))
+rangeInputConfig_attributes f (RangeInputConfig x1 x2 x3) = (\y -&gt; RangeInputConfig x1 x2 y) &lt;$&gt; f x3
+{-# INLINE rangeInputConfig_attributes #-}
+rangeInputConfig_initialValue :: Lens' (RangeInputConfig t) Float
+rangeInputConfig_initialValue f (RangeInputConfig x1 x2 x3) = (\y -&gt; RangeInputConfig y x2 x3) &lt;$&gt; f x1
+{-# INLINE rangeInputConfig_initialValue #-}
+rangeInputConfig_setValue :: Lens' (RangeInputConfig t) (Event t Float)
+rangeInputConfig_setValue f (RangeInputConfig x1 x2 x3) = (\y -&gt; RangeInputConfig x1 y x3) &lt;$&gt; f x2
+{-# INLINE rangeInputConfig_setValue #-}
+rangeInput_element :: Lens' (RangeInput t) HTMLInputElement
+rangeInput_element f (RangeInput x1 x2 x3 x4 x5) = (\y -&gt; RangeInput x1 x2 x3 x4 y) &lt;$&gt; f x5
+{-# INLINE rangeInput_element #-}
+rangeInput_hasFocus :: Lens' (RangeInput t) (Dynamic t Bool)
+rangeInput_hasFocus f (RangeInput x1 x2 x3 x4 x5) = (\y -&gt; RangeInput x1 x2 x3 y x5) &lt;$&gt; f x4
+{-# INLINE rangeInput_hasFocus #-}
+rangeInput_input :: Lens' (RangeInput t) (Event t Float)
+rangeInput_input f (RangeInput x1 x2 x3 x4 x5) = (\y -&gt; RangeInput x1 y x3 x4 x5) &lt;$&gt; f x2
+{-# INLINE rangeInput_input #-}
+rangeInput_mouseup :: Lens' (RangeInput t) (Event t (Int, Int))
+rangeInput_mouseup f (RangeInput x1 x2 x3 x4 x5) = (\y -&gt; RangeInput x1 x2 y x4 x5) &lt;$&gt; f x3
+{-# INLINE rangeInput_mouseup #-}
+rangeInput_value :: Lens' (RangeInput t) (Dynamic t Float)
+rangeInput_value f (RangeInput x1 x2 x3 x4 x5) = (\y -&gt; RangeInput y x2 x3 x4 x5) &lt;$&gt; f x1
+{-# INLINE rangeInput_value #-}
+fileInputConfig_attributes :: Iso
+    (FileInputConfig t1)
+    (FileInputConfig t2)
+    (Dynamic t1 (Map Text Text))
+    (Dynamic t2 (Map Text Text))
+fileInputConfig_attributes = iso (\(FileInputConfig x) -&gt; x) FileInputConfig
+{-# INLINE fileInputConfig_attributes #-}
+fileInput_element :: Lens
+    (FileInput d1 t)
+    (FileInput d2 t)
+    (RawInputElement d1)
+    (RawInputElement d2)
+fileInput_element f (FileInput x1 x2) = (\y -&gt; FileInput x1 y) &lt;$&gt; f x2
+{-# INLINE fileInput_element #-}
+fileInput_value :: Lens
+    (FileInput d t1)
+    (FileInput d t2)
+    (Dynamic t1 [File])
+    (Dynamic t2 [File])
+fileInput_value f (FileInput x1 x2) = (\y -&gt; FileInput y x2) &lt;$&gt; f x1
+{-# INLINE fileInput_value #-}
+dropdownConfig_attributes :: Lens' (DropdownConfig t k) (Dynamic t (Map Text Text))
+dropdownConfig_attributes f (DropdownConfig x1 x2) = (\y -&gt; DropdownConfig x1 y) &lt;$&gt; f x2
+{-# INLINE dropdownConfig_attributes #-}
+dropdownConfig_setValue :: Lens
+    (DropdownConfig t k1)
+    (DropdownConfig t k2)
+    (Event t k1)
+    (Event t k2)
+dropdownConfig_setValue f (DropdownConfig x1 x2) = (\y -&gt; DropdownConfig y x2) &lt;$&gt; f x1
+{-# INLINE dropdownConfig_setValue #-}
+dropdown_change :: Lens' (Dropdown t k) (Event t k)
+dropdown_change f (Dropdown x1 x2) = (\y -&gt; Dropdown x1 y) &lt;$&gt; f x2
+{-# INLINE dropdown_change #-}
+dropdown_value :: Lens' (Dropdown t k) (Dynamic t k)
+dropdown_value f (Dropdown x1 x2) = (\y -&gt; Dropdown y x2) &lt;$&gt; f x1
+{-# INLINE dropdown_value #-}
+checkboxConfig_attributes :: Lens' (CheckboxConfig t) (Dynamic t (Map Text Text))
+checkboxConfig_attributes f (CheckboxConfig x1 x2) = (\y -&gt; CheckboxConfig x1 y) &lt;$&gt; f x2
+{-# INLINE checkboxConfig_attributes #-}
+checkboxConfig_setValue :: Lens' (CheckboxConfig t) (Event t Bool)
+checkboxConfig_setValue f (CheckboxConfig x1 x2) = (\y -&gt; CheckboxConfig y x2) &lt;$&gt; f x1
+{-# INLINE checkboxConfig_setValue #-}
+checkbox_change :: Lens' (Checkbox t) (Event t Bool)
+checkbox_change f (Checkbox x1 x2) = (\y -&gt; Checkbox x1 y) &lt;$&gt; f x2
+{-# INLINE checkbox_change #-}
+checkbox_value :: Lens' (Checkbox t) (Dynamic t Bool)
+checkbox_value f (Checkbox x1 x2) = (\y -&gt; Checkbox y x2) &lt;$&gt; f x1
+{-# INLINE checkbox_value #-}
+#endif
+
+instance HasAttributes (TextAreaConfig t) where
+  type Attrs (TextAreaConfig t) = Dynamic t (Map Text Text)
+  attributes = textAreaConfig_attributes
+
+instance HasAttributes (TextInputConfig t) where
+  type Attrs (TextInputConfig t) = Dynamic t (Map Text Text)
+  attributes = textInputConfig_attributes
+
+instance HasAttributes (RangeInputConfig t) where
+  type Attrs (RangeInputConfig t) = Dynamic t (Map Text Text)
+  attributes = rangeInputConfig_attributes
+
+instance HasAttributes (DropdownConfig t k) where
+  type Attrs (DropdownConfig t k) = Dynamic t (Map Text Text)
+  attributes = dropdownConfig_attributes
+
+instance HasAttributes (CheckboxConfig t) where
+  type Attrs (CheckboxConfig t) = Dynamic t (Map Text Text)
+  attributes = checkboxConfig_attributes
+
+instance HasAttributes (FileInputConfig t) where
+  type Attrs (FileInputConfig t) = Dynamic t (Map Text Text)
+  attributes = fileInputConfig_attributes
+
+class HasSetValue a where
+  type SetValue a :: *
+  setValue :: Lens' a (SetValue a)
+
+instance HasSetValue (TextAreaConfig t) where
+  type SetValue (TextAreaConfig t) = Event t Text
+  setValue = textAreaConfig_setValue
+
+instance HasSetValue (TextInputConfig t) where
+  type SetValue (TextInputConfig t) = Event t Text
+  setValue = textInputConfig_setValue
+
+instance HasSetValue (RangeInputConfig t) where
+  type SetValue (RangeInputConfig t) = Event t Float
+  setValue = rangeInputConfig_setValue
+
+instance HasSetValue (DropdownConfig t k) where
+  type SetValue (DropdownConfig t k) = Event t k
+  setValue = dropdownConfig_setValue
+
+instance HasSetValue (CheckboxConfig t) where
+  type SetValue (CheckboxConfig t) = Event t Bool
+  setValue = checkboxConfig_setValue
+
+class HasValue a where
+  type Value a :: *
+  value :: a -&gt; Value a
+
+instance HasValue (InputElement er d t) where
+  type Value (InputElement er d t) = Dynamic t Text
+  value = _inputElement_value
+
+instance HasValue (TextAreaElement er d t) where
+  type Value (TextAreaElement er d t) = Dynamic t Text
+  value = _textAreaElement_value
+
+instance HasValue (TextArea t) where
+  type Value (TextArea t) = Dynamic t Text
+  value = _textArea_value
+
+instance HasValue (TextInput t) where
+  type Value (TextInput t) = Dynamic t Text
+  value = _textInput_value
+
+instance HasValue (RangeInput t) where
+  type Value (RangeInput t) = Dynamic t Float
+  value = _rangeInput_value
+
+instance HasValue (FileInput d t) where
+  type Value (FileInput d t) = Dynamic t [File]
+  value = _fileInput_value
+
+instance HasValue (Dropdown t k) where
+  type Value (Dropdown t k) = Dynamic t k
+  value = _dropdown_value
+
+instance HasValue (Checkbox t) where
+  type Value (Checkbox t) = Dynamic t Bool
+  value = _checkbox_value
+
+{-
+type family Controller sm t a where
+  Controller Edit t a = (a, Event t a) -- Initial value and setter
+  Controller View t a = Dynamic t a -- Value (always)
+
+type family Output sm t a where
+  Output Edit t a = Dynamic t a -- Value (always)
+  Output View t a = Event t a -- Requested changes
+
+data CheckboxConfig sm t
+   = CheckboxConfig { _checkbox_input :: Controller sm t Bool
+                    , _checkbox_attributes :: Attributes
+                    }
+
+instance Reflex t =&gt; Default (CheckboxConfig Edit t) where
+  def = CheckboxConfig (False, never) mempty
+
+data Checkbox sm t
+  = Checkbox { _checkbox_output :: Output sm t Bool
+             }
+
+data StateMode = Edit | View
+
+--TODO: There must be a more generic way to get this witness and allow us to case on the type-level StateMode
+data StateModeWitness (sm :: StateMode) where
+  EditWitness :: StateModeWitness Edit
+  ViewWitness :: StateModeWitness View
+
+class HasStateModeWitness (sm :: StateMode) where
+  stateModeWitness :: StateModeWitness sm
+
+instance HasStateModeWitness Edit where
+  stateModeWitness = EditWitness
+
+instance HasStateModeWitness View where
+  stateModeWitness = ViewWitness
+-}
+</span></pre></body></html>
